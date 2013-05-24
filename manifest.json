@@ -1,0 +1,28 @@
+{
+   "content_scripts": [
+     {
+       "js": ["jquery.js", "Goko_Live_Log_Viewer.user.js"],
+       "run_at": "document_start",
+       "css": [],
+       "matches": [
+         "http://play.goko.com/Dominion/gameClient.html",
+         "https://play.goko.com/Dominion/gameClient.html",
+         "http://beta.goko.com/Dominion/gameClient.html",
+         "https://beta.goko.com/Dominion/gameClient.html"
+       ]
+     }
+   ],
+   "permissions": [
+     "https://dominion.goko.com/",
+     "http://dominion.goko.com/",
+     "https://beta.goko.com/",
+     "http://beta.goko.com/"
+   ],
+   "icons": { "16": "icon16.png",
+           "48": "icon48.png",
+          "128": "icon128.png" },
+   "description": "Goko Log Viewer",
+   "name": "Goko Log Viewer",
+   "version": "0.101",
+   "manifest_version": 2
+}
