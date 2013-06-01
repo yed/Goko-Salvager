@@ -1,12 +1,12 @@
 {
    "name": "Dominion Online Live Log Viewer",
    "description": "Dominion Online Live Log Viewer",
-   "version": "11",
+   "version": "1.12",
    "manifest_version": 2,
 
    "content_scripts": [
      {
-       "js": ["set_parser.js", "Goko_Live_Log_Viewer.user.js"],
+       "js": ["Goko_Live_Log_Viewer.user.js"],
        "matches": [
          "http://play.goko.com/Dominion/gameClient.html",
          "https://play.goko.com/Dominion/gameClient.html",
