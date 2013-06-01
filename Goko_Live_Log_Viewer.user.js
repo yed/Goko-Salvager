@@ -946,6 +946,14 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
     this.old_getRating(opts, callback); 
 }
 
+FS.ClassicRoomView.prototype.old_modifyDOM =
+FS.ClassicRoomView.prototype.modifyDOM;
+FS.ClassicRoomView.prototype.modifyDOM = function () {
+    if (options.proranks)
+        this.meetingRoom.options.ratingSystemId = FS.MeetingRoomSetting.ratingSystemPro;
+    this.old_modifyDOM();
+};
+
 
 // Launch Screen changes module
 //
