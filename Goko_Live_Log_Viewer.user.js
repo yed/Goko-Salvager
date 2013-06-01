@@ -946,6 +946,27 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
     this.old_getRating(opts, callback); 
 }
 
+
+// Launch Screen changes module
+//
+// Goko dependencies:
+//   - _initScreens API
+// Internal dependencies:
+//   - options.hideAvatar
+//   - options.hideAds
+FS.LaunchScreen.Main.prototype.old_initScreens =
+FS.LaunchScreen.Main.prototype._initScreens;
+FS.LaunchScreen.Main.prototype._initScreens = function () {
+    this.old_initScreens();
+
+    if (options.hideAvatar)
+        $('#fs-lg-full-avatar').hide();
+
+    if (options.hideAds)
+        $('.fs-upsell-box').hide();
+
+};
+
 //
 // Configuration module
 //
@@ -959,6 +980,8 @@ var options = {
     autokick: true,
     generator: true,
     proranks: true,
+    hideAvatar: true,
+    hideAds: true
 };
 function options_save() {
     localStorage.userOptions = JSON.stringify(options);
@@ -980,6 +1003,8 @@ function options_window() {
     h+= '<input name="autokick" type="checkbox">Auto kick<br>';
     h+= '<input name="generator" type="checkbox">Kingdom generator (see <a target="_blank" href="http://dom.retrobox.eu/kingdomgenerator.html">instructions</a>)<br>';
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
+    h+= '<input name="hide-avatar" type="checkbox">Hide launch screen avatar<br>';
+    h+= '<input name="hide-ads" type="checkbox">Hide launch screen ads<br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
@@ -989,10 +1014,14 @@ function options_window() {
     $('#optform input[name="autokick"]').prop('checked',options.autokick);
     $('#optform input[name="generator"]').prop('checked',options.generator);
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
+    $('#optform input[name="hide-avatar"]').prop('checked',options.hideAvatar);
+    $('#optform input[name="hide-ads"]').prop('checked',options.hideAds);
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
+	options.hideAvatar = $('#optform input[name="hide-avatar"]').prop('checked');
+	options.hideAds = $('#optform input[name="hide-ads"]').prop('checked');
 	options_save();
 	$('#usersettings').hide();
 	return false;
