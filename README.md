@@ -1,6 +1,6 @@
 Goko Live Log Viewer for Chome
 ==============================
-[Version 12 of nutki's script](https://github.com/nutki/Goko-Live-Log-Viewer)
+[Version 13 of nutki's script](https://github.com/nutki/Goko-Live-Log-Viewer)
 
 To see a feature list or suggest new ones, [visit the Dominion Strategy forum](http://forum.dominionstrategy.com/index.php?topic=8163.0).
 
