@@ -955,6 +955,35 @@ FS.ClassicRoomView.prototype.modifyDOM = function () {
 };
 
 
+//
+// Sort by ratings module
+//
+// External dependencies:
+//   - James Padolsey's jQuery plugin, sortElements
+// Goko dependencies:
+//   - _responseRating API
+//   - class name of the player ul element ('fs-player-list')
+//   - class name of the player list rank element ('player-rank')
+// Internal dependencies: enabled by options.sortrating
+//
+FS.RatingHelper.prototype.old_responseRating =
+FS.RatingHelper.prototype._responseRating;
+FS.RatingHelper.prototype._responseRating = function (opts, ratingData, callback) {
+    this.old_responseRating(opts, ratingData, callback);
+
+    if (options.sortrating)
+        $('ul.fs-player-list li').sortElements(function (a, b) {
+            var rankA = parseInt($(a).find('.player-rank').text(), 10),
+                rankB = parseInt($(b).find('.player-rank').text(), 10),
+                nameA = $(a).find('.fs-mtrm-player-name strong').text().toUpperCase(),
+                nameB = $(b).find('.fs-mtrm-player-name strong').text().toUpperCase();
+            return rankA === rankB ?
+                nameA > nameB ? 1 : -1 :
+                rankA < rankB ? 1 : -1;
+        });
+};
+
+
 // Launch Screen changes module
 //
 // Goko dependencies:
@@ -989,7 +1018,8 @@ var options = {
     generator: true,
     proranks: true,
     hideAvatar: true,
-    hideAds: true
+    hideAds: true,
+    sortrating: true
 };
 function options_save() {
     localStorage.userOptions = JSON.stringify(options);
@@ -1013,6 +1043,7 @@ function options_window() {
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="hide-avatar" type="checkbox">Hide launch screen avatar<br>';
     h+= '<input name="hide-ads" type="checkbox">Hide launch screen ads<br>';
+    h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
@@ -1024,12 +1055,14 @@ function options_window() {
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="hide-avatar"]').prop('checked',options.hideAvatar);
     $('#optform input[name="hide-ads"]').prop('checked',options.hideAds);
+    $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
 	options.hideAvatar = $('#optform input[name="hide-avatar"]').prop('checked');
 	options.hideAds = $('#optform input[name="hide-ads"]').prop('checked');
+	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked');
 	options_save();
 	$('#usersettings').hide();
 	return false;
@@ -1048,6 +1081,9 @@ if (navigator.userAgent.indexOf('Firefox') >= 0) {
     var runInPageContext = function(fn) {
 	var script = document.createElement('script');
 	script.src = 'http://dom.retrobox.eu/js/1.0.0/set_parser.js';
+	document.body.appendChild(script);
+	script = document.createElement('script');
+	script.src = 'https://raw.github.com/padolsey/jQuery-Plugins/master/sortElements/jquery.sortElements.js';
 	document.body.appendChild(script);
 	script = document.createElement('script');
 	script.textContent = '('+ fn +')();';
