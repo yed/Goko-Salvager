@@ -1,7 +1,7 @@
 {
    "name": "Dominion Online Live Log Viewer",
    "description": "Dominion Online Live Log Viewer",
-   "version": "1.13.1",
+   "version": "1.13.2",
    "manifest_version": 2,
 
    "content_scripts": [
