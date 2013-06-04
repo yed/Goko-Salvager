@@ -933,18 +933,35 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 // Goko dependencies:
 //   - getRating API specifics ($elPro and $elQuit trigger getting the pro ranking)
 //   - class name of the player list rank element ('player-rank')
-// Internal dependencies: enabled by options.proranks
+//   - format of the text content of the player list element ('username Rating: 1000')
+// Internal dependencies:
+//   - pro rating display enabled by options.proranks
+//   - sort by rating enabled by options.sortrating
+//   - insertInPlace()
+//   - getRatingObject()
 //
 FS.RatingHelper.prototype.old_getRating = 
 FS.RatingHelper.prototype.getRating;
 FS.RatingHelper.prototype.getRating = function (opts, callback) {
+    var newCallback = callback;
+
+    if (options.sortrating && opts.$el.hasClass("player-rank")) {
+        var playerList = opts.$el.closest('ul')[0],
+            playerElement = opts.$el.closest('li')[0];
+        newCallback = function () {
+            callback();
+            insertInPlace(playerList, playerElement);
+        };
+    }
+
     if (options.proranks && opts.$el && opts.$el.hasClass('player-rank')) {
 	opts.$elPro = opts.$el;
 	opts.$elQuit = $(document.createElement('div'));
 	delete opts.$el;
     }
-    this.old_getRating(opts, callback); 
-}
+
+    this.old_getRating(opts, newCallback);
+};
 
 FS.ClassicRoomView.prototype.old_modifyDOM =
 FS.ClassicRoomView.prototype.modifyDOM;
@@ -956,33 +973,59 @@ FS.ClassicRoomView.prototype.modifyDOM = function () {
     this.meetingRoom.options.ratingSystemId = originalRating;
 };
 
+var insertInPlace = function (list, element) {
+    list.removeChild(element);
 
-//
-// Sort by ratings module
-//
-// Goko dependencies:
-//   - _responseRating API
-//   - class name of the player ul element ('fs-player-list')
-//   - class name of the player list rank element ('player-rank')
-// Internal dependencies: enabled by options.sortrating
-//
-FS.RatingHelper.prototype.old_responseRating =
-FS.RatingHelper.prototype._responseRating;
-FS.RatingHelper.prototype._responseRating = function (opts, ratingData, callback) {
-    this.old_responseRating(opts, ratingData, callback);
-    if (options.sortrating) {
-	var list = $('ul.fs-player-list');
-	var elements = $('ul.fs-player-list li');
-        list.append(elements.sort(function (a, b) {
-            var rankA = parseInt($(a).find('.player-rank').text(), 10),
-                rankB = parseInt($(b).find('.player-rank').text(), 10),
-                nameA = $(a).find('.fs-mtrm-player-name strong').text().toUpperCase(),
-                nameB = $(b).find('.fs-mtrm-player-name strong').text().toUpperCase();
-            return rankA === rankB ?
-                nameA > nameB ? 1 : -1 :
-                rankA < rankB ? 1 : -1;
-        }));
+    var newEl = getSortablePlayerObjectFromElement(element),
+        compare,
+        elements = list.children,
+        count = elements.length,
+        a = 0,
+        b = count,
+        c = parseInt((a+b)/2, 10);
+
+    while (a !== b) {
+        compare = getSortablePlayerObjectFromElement(elements[c]);
+
+        // sort first by rating, then alphabetically
+        if (compare.rating < newEl.rating) {
+            b = c;
+        } else if (compare.rating > newEl.rating) {
+            a = a === c ? b : c;
+        } else if (compare.rating === newEl.rating) {
+            if (compare.name > newEl.name) {
+                b = c;
+            } else if (compare.name < newEl.name) {
+                a = a === c ? b : c;
+            } else if (compare.name === newEl.name) {
+                return;
+            }
+        }
+
+        c = parseInt((a+b)/2, 10);
+
     }
+
+    if (c < count) {
+        list.insertBefore(element,elements[c]);
+    } else {
+        list.appendChild(element);
+    }
+
+};
+
+var getSortablePlayerObjectFromElement = function (element) {
+    var nameRatingPair = element.textContent.trim().split(/ Rating:/),
+        name = nameRatingPair[0].toUpperCase(),
+        rating = element.getElementsByClassName("rank")[0].getAttribute("style") === "visibility: visible;" ?
+            parseInt(nameRatingPair[1], 10) :
+            -1;
+
+    return {
+        name: name,
+        rating: rating
+    };
+
 };
 
 
