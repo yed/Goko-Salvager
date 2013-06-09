@@ -844,7 +844,7 @@ kingdomsel.prototype = {
     prompt: function(callback) {
 	var self = this;
 	this.sel.style.display = 'block';
-	this.selval.focus();
+	this.selval.select();
 	this.selform.onsubmit = function () {
 	    callback(this.selval.value);
 	    self.sel.style.display = 'none';
