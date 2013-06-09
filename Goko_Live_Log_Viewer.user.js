@@ -36,6 +36,7 @@ Dom.DominionWindow.prototype._updateState = function (opt) {
 
 Dom.LogManager.prototype.old_addLog = Dom.LogManager.prototype.addLog;
 Dom.LogManager.prototype.addLog = function (opt) {
+    if (options.log) {
     if (opt.logUrl) {
 	opt.logUrl = 'http://dom.retrobox.eu/?'+opt.logUrl.substr(29);
     }
@@ -96,6 +97,7 @@ Dom.LogManager.prototype.addLog = function (opt) {
 	newLogRefresh();
 	var newLogContainer = document.getElementById("newlogcontainer");
 	newLogContainer.scrollTop = newLogContainer.scrollHeight;
+    }
     }
     this.old_addLog(opt);
 };
@@ -1042,7 +1044,8 @@ var options = {
     autokick: true,
     generator: true,
     proranks: true,
-    sortrating: true
+    sortrating: true,
+    log: true
 };
 function options_save() {
     localStorage.userOptions = JSON.stringify(options);
@@ -1065,6 +1068,7 @@ function options_window() {
     h+= '<input name="generator" type="checkbox">Kingdom generator (see <a target="_blank" href="http://dom.retrobox.eu/kingdomgenerator.html">instructions</a>)<br>';
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
+    h+= '<input name="log" type="checkbox">Live Log Viewer<br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
@@ -1075,11 +1079,13 @@ function options_window() {
     $('#optform input[name="generator"]').prop('checked',options.generator);
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
+    $('#optform input[name="log"]').prop('checked',options.log);
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
 	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked');
+	options.log = $('#optform input[name="log"]').prop('checked');
 	options_save();
 	$('#usersettings').hide();
 	return false;
