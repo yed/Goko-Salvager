@@ -947,7 +947,7 @@ FS.RatingHelper.prototype.getRating;
 FS.RatingHelper.prototype.getRating = function (opts, callback) {
     var newCallback = callback;
 
-    if (options.sortrating && opts.$el.hasClass("player-rank")) {
+    if (options.sortrating && opts.$el && opts.$el.hasClass("player-rank")) {
         var playerList = opts.$el.closest('ul')[0],
             playerElement = opts.$el.closest('li')[0];
         newCallback = function () {
