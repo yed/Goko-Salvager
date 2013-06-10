@@ -1,7 +1,7 @@
 {
    "name": "Dominion Online User Extension",
    "description": "Dominion Online User Extension",
-   "version": "1.13.3",
+   "version": "1.13.4",
    "manifest_version": 2,
 
    "content_scripts": [
