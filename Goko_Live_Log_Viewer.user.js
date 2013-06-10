@@ -896,7 +896,9 @@ window.sets = sets;
 //   - getRating API specifics ($elPro and $elQuit trigger getting the pro ranking)
 //   - onPlayerJoinTable API
 //   - lot of other APIs (bootTable, table settings, isLocalOwner)
-// Internal dependencies: enabled by options.autokick
+// Internal dependencies
+//   - rating-based auto kick enabled by options.autokick
+//   - personal black list auto kick enabled by options.blacklist
 //
 joinSound = document.createElement('div');
 joinSound.innerHTML = '<audio id="_joinSound" style="display: none;" src="sounds/startTurn.ogg"></audio>';
@@ -905,8 +907,9 @@ FS.ZoneClassicHelper.prototype.old_onPlayerJoinTable =
 FS.ZoneClassicHelper.prototype.onPlayerJoinTable;
 FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
     this.old_onPlayerJoinTable(t,tp);
+    var p = tp.get('player');
+
     if (options.autokick && this.isLocalOwner(t)) {
-	var p = tp.get('player');
 	var settings = JSON.parse(t.get("settings"));
 	var pro = settings.ratingType == 'pro';
 	var m = settings.name.toLowerCase().match(/\b(\d+)(\d{3}|k)\+/);
@@ -927,6 +930,14 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 	    }); else document.getElementById('_joinSound').play();
 	});
     }
+
+    if (options.blacklist.indexOf(tp.getName()) > -1 && this.isLocalOwner(t)) {
+        this.meetingRoom.conn.bootTable({
+            table: t.get('number'),
+            playerAddress: p.get('playerAddress')
+        });
+    }
+
 }
 
 //
@@ -1045,7 +1056,8 @@ var options = {
     generator: true,
     proranks: true,
     sortrating: true,
-    log: true
+    log: true,
+    blacklist: [""]
 };
 function options_save() {
     localStorage.userOptions = JSON.stringify(options);
@@ -1069,6 +1081,7 @@ function options_window() {
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
     h+= '<input name="log" type="checkbox">Live Log Viewer<br>';
+    h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
@@ -1080,12 +1093,14 @@ function options_window() {
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
     $('#optform input[name="log"]').prop('checked',options.log);
+    $('#optform textarea').val(options.blacklist.join("\n"));
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
 	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked');
 	options.log = $('#optform input[name="log"]').prop('checked');
+	options.blacklist = $('#optform textarea[name="blacklist"]').val().split("\n");
 	options_save();
 	$('#usersettings').hide();
 	return false;
