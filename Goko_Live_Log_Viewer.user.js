@@ -987,6 +987,7 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 // Internal dependencies:
 // - pro rating display enabled by options.proranks
 // - sort by rating enabled by options.sortrating
+// - blacklisted players to be hidden set in options.blacklist
 // - insertInPlace()
 // - getRatingObject()
 //
@@ -996,13 +997,16 @@ FS.RatingHelper.prototype.getRating;
 FS.RatingHelper.prototype.getRating = function (opts, callback) {
     var newCallback = callback;
     if (opts.$el && opts.$el.hasClass('player-rank')) {
-	if (options.sortrating) {
-	    var playerElement = opts.$el.closest('li')[0];
-	    newCallback = function () {
-		callback();
+	newCallback = function () {
+	    callback();
+	    if (options.sortrating) {
+		var playerElement = opts.$el.closest('li')[0];
 		insertInPlace(playerElement);
-	    };
-	}
+	    }
+	    if (options.blacklist.indexOf(playerElement.querySelector('.fs-mtrm-player-name>strong').innerHTML) > -1 ) {
+		$(playerElement).hide();
+	    }
+	};
 	if (options.proranks) {
 	    opts.$elPro = opts.$el;
 	    opts.$elQuit = $(document.createElement('div'));
