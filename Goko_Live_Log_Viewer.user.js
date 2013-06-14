@@ -1058,6 +1058,18 @@ function getSortablePlayerObjectFromElement(element) {
     };
 }
 
+FS.MeetingRoom.prototype.old_onRoomChat =
+FS.MeetingRoom.prototype.onRoomChat;
+FS.MeetingRoom.prototype.onRoomChat = function (resp) {
+    var player = this.playerList.findByAddress(resp.data.playerAddress).getName();
+
+    if (options.blacklist.indexOf(player) > -1) {
+	return;
+    }
+
+    this.old_onRoomChat(resp);
+};
+
 //
 // Configuration module
 //
