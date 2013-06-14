@@ -1095,8 +1095,8 @@ function options_window() {
     h+= '<input name="generator" type="checkbox">Kingdom generator (see <a target="_blank" href="http://dom.retrobox.eu/kingdomgenerator.html">instructions</a>)<br>';
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
-    h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
     h+= '<input name="adventurevp" type="checkbox">Victory point tracker in Adventures<br>';
+    h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
