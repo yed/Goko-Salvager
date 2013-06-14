@@ -1005,6 +1005,8 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
 	    }
 	    if (options.blacklist.indexOf(playerElement.querySelector('.fs-mtrm-player-name>strong').innerHTML) > -1 ) {
 		$(playerElement).hide();
+	    } else {
+		$(playerElement).show();
 	    }
 	};
 	if (options.proranks) {
