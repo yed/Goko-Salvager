@@ -1072,6 +1072,30 @@ FS.MeetingRoom.prototype.onRoomChat = function (resp) {
     this.old_onRoomChat(resp);
 };
 
+FS.ClassicTableView.prototype.old_modifyDOM =
+FS.ClassicTableView.prototype.modifyDOM;
+FS.ClassicTableView.prototype.modifyDOM = function () {
+    FS.ClassicTableView.prototype.old_modifyDOM.call(this);
+
+    var players, name, blacklisted;
+
+    if (this.model && this.model.getJoinedPlayers) {
+	players = this.model.getJoinedPlayers();
+	_(players).each(function (player, index, list) {
+	    name = player.getName();
+	    if (options.blacklist.indexOf(name) > -1 && this.model && this.model.view && this.model.view.$el) {
+		blacklisted = true;
+	    };
+	}, this);
+
+	if (blacklisted) {
+	    this.model.view.$el.hide();	    
+	}
+    }
+
+
+};
+
 //
 // Configuration module
 //
