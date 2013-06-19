@@ -995,12 +995,12 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 FS.RatingHelper.prototype.old_getRating =
 FS.RatingHelper.prototype.getRating;
 FS.RatingHelper.prototype.getRating = function (opts, callback) {
-    var newCallback = callback;
+    var newCallback = callback, playerElement;
     if (opts.$el && opts.$el.hasClass('player-rank')) {
+	playerElement = opts.$el.closest('li')[0];
 	newCallback = function () {
 	    callback();
 	    if (options.sortrating) {
-		var playerElement = opts.$el.closest('li')[0];
 		insertInPlace(playerElement);
 	    }
 	    if (options.blacklist.indexOf(playerElement.querySelector('.fs-mtrm-player-name>strong').innerHTML) > -1 ) {
