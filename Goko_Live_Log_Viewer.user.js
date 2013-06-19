@@ -1077,7 +1077,7 @@ FS.ClassicTableView.prototype.modifyDOM;
 FS.ClassicTableView.prototype.modifyDOM = function () {
     FS.ClassicTableView.prototype.old_modifyDOM.call(this);
 
-    var players, name, blacklisted;
+    var players, name, blacklisted, localPlayerJoined;
 
     if (this.model && this.model.getJoinedPlayers) {
 	players = this.model.getJoinedPlayers();
@@ -1086,10 +1086,15 @@ FS.ClassicTableView.prototype.modifyDOM = function () {
 	    if (options.blacklist.indexOf(name) > -1 && this.model && this.model.view && this.model.view.$el) {
 		blacklisted = true;
 	    };
+	    if (name === this.meetingRoom.getLocalPlayer().getName()) {
+		localPlayerJoined = true;
+	    }
 	}, this);
 
-	if (blacklisted) {
-	    this.model.view.$el.hide();	    
+	if (blacklisted && !localPlayerJoined) {
+	    this.model.view.$el.hide();
+	} else if (blacklisted && localPlayerJoined) {
+	    console.log("Warning: in a game with a blacklisted player.");
 	}
     }
 
