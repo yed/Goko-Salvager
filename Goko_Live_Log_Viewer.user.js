@@ -306,7 +306,6 @@ Dom.DominionWindow.prototype._updateState = function (opt) {
 
 Dom.LogManager.prototype.old_addLog = Dom.LogManager.prototype.addLog;
 Dom.LogManager.prototype.addLog = function (opt) {
-    if (options.log) {
     if (opt.logUrl) {
 	opt.logUrl = 'http://dom.retrobox.eu/?'+opt.logUrl.substr(29);
     }
@@ -368,7 +367,6 @@ Dom.LogManager.prototype.addLog = function (opt) {
 	newLogRefresh();
 	var newLogContainer = document.getElementById("newlogcontainer");
 	newLogContainer.scrollTop = newLogContainer.scrollHeight;
-    }
     }
     this.old_addLog(opt);
 };
