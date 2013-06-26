@@ -1370,6 +1370,26 @@ FS.ClassicTableView.prototype.modifyDOM = function () {
 };
 
 //
+// Always Stack module
+//
+// Goko dependencies:
+// - addView API (setting stackCards in that function, value of autoStackCards)
+// Internal dependencies:
+// - options.alwaysStack
+//
+FS.Cards.CardStackPanel.prototype.old_addView =
+FS.Cards.CardStackPanel.prototype.addView;
+FS.Cards.CardStackPanel.prototype.addView = function(view, index) {
+    var ret = this.old_addView(view, index);
+    if (options.alwaysStack && this.autoStackCards) {
+	this.stackCards = true;
+    }
+    return ret;
+};
+
+
+
+//
 // Configuration module
 //
 // Exports: 'options' object, options_save function.
@@ -1384,6 +1404,7 @@ var default_options = {
     proranks: true,
     sortrating: true,
     adventurevp: true,
+    alwaysStack: false,
     blacklist: [""]
 };
 var options = {};
@@ -1411,6 +1432,7 @@ function options_window() {
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
     h+= '<input name="adventurevp" type="checkbox">Victory point tracker in Adventures<br>';
+    h+= '<input name="always-stack" type="checkbox">Always stack same-named cards in hand<br>';
     h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
@@ -1422,6 +1444,7 @@ function options_window() {
     $('#optform input[name="generator"]').prop('checked',options.generator);
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
+    $('#optform input[name="always-stack"]').prop('checked',options.alwaysStack);
     $('#optform textarea').val(options.blacklist.join("\n"));
     $('#optform input[name="adventurevp"]').prop('checked',options.adventurevp);
     document.getElementById('optform').onsubmit = function () {
@@ -1430,6 +1453,7 @@ function options_window() {
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
 	options.blacklist = $('#optform textarea[name="blacklist"]').val().split("\n");
 	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked'); 
+	options.alwaysStack = $('#optform input[name="always-stack"]').prop('checked');
 	options.adventurevp = $('#optform input[name="adventurevp"]').prop('checked'); 
 	options_save();
 	$('#usersettings').hide();
