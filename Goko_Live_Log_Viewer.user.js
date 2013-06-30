@@ -619,6 +619,7 @@ DominionClient.prototype.onIncomingMessage = function(messageName, messageData, 
 		this.clientConnection.send('sendChat',{text:'Victory Point tracker setting locked'});
 	    } else {
 		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
 		vpOn = true;
 	    }
 	} else if (messageData.text.toUpperCase() == '#VP?' && vpOn) {
@@ -630,13 +631,18 @@ DominionClient.prototype.onIncomingMessage = function(messageName, messageData, 
 	var tablename = JSON.parse(this.table.get("settings")).name;
 	if (tablename) {
 	    tablename = tablename.toUpperCase();
+	    this.clientConnection.send('sendChat', {text: 'Dominion Online User Extension enabled (see goo.gl/4muRB)'});
 	    if (tablename.indexOf("#VPON") != -1) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled and locked (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
 		vpOn = true;
 		vpLocked = true;
 	    } else if (tablename.indexOf("#VPOFF") != -1) {
+		this.clientConnection.send('sendChat',{text:'Victory Point tracker disallowed and locked (see http://dom.retrobox.eu/vp.html)'});
 		vpOn = false;
 		vpLocked = true;
+	    } else {
+		this.clientConnection.send('sendChat',{text:'Type "#vpon" before turn 5 to enable point tracker; type "#vpoff" before turn 5 to disallow the point tracker.'});
 	    }
 	}
     } else if (messageName == 'addLog' && messageData.text == 'Rating system: adventure' && options.adventurevp) {
