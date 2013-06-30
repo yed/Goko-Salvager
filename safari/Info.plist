@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>nutki &amp; michaeljb</string>
+	<key>Builder Version</key>
+	<string>7536.30.1</string>
+	<key>CFBundleDisplayName</key>
+	<string>Dominion Online User Extension</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.dominionstrategy.dominiononlineuserextension</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.15.4</string>
+	<key>CFBundleVersion</key>
+	<string>1.15.4</string>
+	<key>Chrome</key>
+	<dict/>
+	<key>Content</key>
+	<dict>
+		<key>Scripts</key>
+		<dict>
+			<key>End</key>
+			<array>
+				<string>Goko_Live_Log_Viewer.user.js</string>
+			</array>
+		</dict>
+	</dict>
+	<key>Description</key>
+	<string>Enhance your experience at playdominion.com</string>
+	<key>ExtensionInfoDictionaryVersion</key>
+	<string>1.0</string>
+	<key>Permissions</key>
+	<dict>
+		<key>Website Access</key>
+		<dict>
+			<key>Allowed Domains</key>
+			<array>
+				<string>*.goko.com/Dominion</string>
+			</array>
+			<key>Level</key>
+			<string>Some</string>
+		</dict>
+	</dict>
+	<key>Website</key>
+	<string>http://forum.dominionstrategy.com/index.php?topic=8163.0</string>
+</dict>
+</plist>

@@ -619,6 +619,7 @@ DominionClient.prototype.onIncomingMessage = function(messageName, messageData, 
 		this.clientConnection.send('sendChat',{text:'Victory Point tracker setting locked'});
 	    } else {
 		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
 		vpOn = true;
 	    }
 	} else if (messageData.text.toUpperCase() == '#VP?' && vpOn) {
@@ -630,13 +631,18 @@ DominionClient.prototype.onIncomingMessage = function(messageName, messageData, 
 	var tablename = JSON.parse(this.table.get("settings")).name;
 	if (tablename) {
 	    tablename = tablename.toUpperCase();
+	    this.clientConnection.send('sendChat', {text: 'Dominion Online User Extension enabled (see goo.gl/4muRB)'});
 	    if (tablename.indexOf("#VPON") != -1) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled and locked (see http://dom.retrobox.eu/vp.html)'});
+		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
 		vpOn = true;
 		vpLocked = true;
 	    } else if (tablename.indexOf("#VPOFF") != -1) {
+		this.clientConnection.send('sendChat',{text:'Victory Point tracker disallowed and locked (see http://dom.retrobox.eu/vp.html)'});
 		vpOn = false;
 		vpLocked = true;
+	    } else {
+		this.clientConnection.send('sendChat',{text:'Type "#vpon" before turn 5 to enable point tracker; type "#vpoff" before turn 5 to disallow the point tracker.'});
 	    }
 	}
     } else if (messageName == 'addLog' && messageData.text == 'Rating system: adventure' && options.adventurevp) {
@@ -764,7 +770,7 @@ alchemist:"Ap",familiar:"Ap",philosophersstone:"Ap",
 golem:"Ap",
 possession:"Ap",
 loan:"P3",traderoute:"P3",watchtower:"P3",
-bishop:"P4",monument:"P4",quarry:"P4",talisman:"P4",workervillage:"P4",
+bishop:"P4",monument:"P4",quarry:"P4",talisman:"P4",workersvillage:"P4",
 city:"P5",contraband:"P5",countinghouse:"P5",mint:"P5",mountebank:"P5",rabble:"P5",royalseal:"P5",vault:"P5",venture:"P5",
 goons:"P6",grandmarket:"P6",hoard:"P6",
 bank:"P7",expand:"P7",forge:"P7",kingscourt:"P7",
@@ -931,7 +937,9 @@ window.sets = sets;
 //   - getRating API specifics ($elPro and $elQuit trigger getting the pro ranking)
 //   - onPlayerJoinTable API
 //   - lot of other APIs (bootTable, table settings, isLocalOwner)
-// Internal dependencies: enabled by options.autokick
+// Internal dependencies
+//   - rating-based auto kick enabled by options.autokick
+//   - personal black list auto kick enabled by options.blacklist
 //
 joinSound = document.createElement('div');
 joinSound.innerHTML = '<audio id="_joinSound" style="display: none;" src="sounds/startTurn.ogg"></audio>';
@@ -940,8 +948,9 @@ FS.ZoneClassicHelper.prototype.old_onPlayerJoinTable =
 FS.ZoneClassicHelper.prototype.onPlayerJoinTable;
 FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
     this.old_onPlayerJoinTable(t,tp);
+    var p = tp.get('player');
+
     if (options.autokick && this.isLocalOwner(t)) {
-	var p = tp.get('player');
 	var settings = JSON.parse(t.get("settings"));
 	var pro = settings.ratingType == 'pro';
 	var m = settings.name.toLowerCase().match(/\b(\d+)(\d{3}|k)\+/);
@@ -962,6 +971,14 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 	    }); else document.getElementById('_joinSound').play();
 	});
     }
+
+    if (options.blacklist.indexOf(tp.getName()) > -1 && this.isLocalOwner(t)) {
+        this.meetingRoom.conn.bootTable({
+            table: t.get('number'),
+            playerAddress: p.get('playerAddress')
+        });
+    }
+
 }
 
 //
@@ -974,6 +991,7 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 // Internal dependencies:
 // - pro rating display enabled by options.proranks
 // - sort by rating enabled by options.sortrating
+// - blacklisted players to be hidden set in options.blacklist
 // - insertInPlace()
 // - getRatingObject()
 //
@@ -981,15 +999,20 @@ FS.ZoneClassicHelper.prototype.onPlayerJoinTable = function (t,tp) {
 FS.RatingHelper.prototype.old_getRating =
 FS.RatingHelper.prototype.getRating;
 FS.RatingHelper.prototype.getRating = function (opts, callback) {
-    var newCallback = callback;
+    var newCallback = callback, playerElement;
     if (opts.$el && opts.$el.hasClass('player-rank')) {
-	if (options.sortrating) {
-	    var playerElement = opts.$el.closest('li')[0];
-	    newCallback = function () {
-		callback();
+	playerElement = opts.$el.closest('li')[0];
+	newCallback = function () {
+	    callback();
+	    if (options.sortrating) {
 		insertInPlace(playerElement);
-	    };
-	}
+	    }
+	    if (options.blacklist.indexOf(playerElement.querySelector('.fs-mtrm-player-name>strong').innerHTML) > -1 ) {
+		$(playerElement).hide();
+	    } else {
+		$(playerElement).show();
+	    }
+	};
 	if (options.proranks) {
 	    opts.$elPro = opts.$el;
 	    opts.$elQuit = $(document.createElement('div'));
@@ -1041,6 +1064,67 @@ function getSortablePlayerObjectFromElement(element) {
     };
 }
 
+FS.MeetingRoom.prototype.old_onRoomChat =
+FS.MeetingRoom.prototype.onRoomChat;
+FS.MeetingRoom.prototype.onRoomChat = function (resp) {
+    var player = this.playerList.findByAddress(resp.data.playerAddress).getName();
+
+    if (options.blacklist.indexOf(player) > -1) {
+	return;
+    }
+
+    this.old_onRoomChat(resp);
+};
+
+FS.ClassicTableView.prototype.old_modifyDOM =
+FS.ClassicTableView.prototype.modifyDOM;
+FS.ClassicTableView.prototype.modifyDOM = function () {
+    FS.ClassicTableView.prototype.old_modifyDOM.call(this);
+
+    var players, name, blacklisted, localPlayerJoined;
+
+    if (this.model && this.model.getJoinedPlayers) {
+	players = this.model.getJoinedPlayers();
+	_(players).each(function (player, index, list) {
+	    name = player.getName();
+	    if (options.blacklist.indexOf(name) > -1 && this.model && this.model.view && this.model.view.$el) {
+		blacklisted = true;
+	    };
+	    if (name === this.meetingRoom.getLocalPlayer().getName()) {
+		localPlayerJoined = true;
+	    }
+	}, this);
+
+	if (blacklisted && !localPlayerJoined) {
+	    this.model.view.$el.hide();
+	} else if (blacklisted && localPlayerJoined) {
+	    console.log("Warning: in a game with a blacklisted player.");
+	}
+    }
+
+
+};
+
+//
+// Always Stack module
+//
+// Goko dependencies:
+// - addView API (setting stackCards in that function, value of autoStackCards)
+// Internal dependencies:
+// - options.alwaysStack
+//
+FS.Cards.CardStackPanel.prototype.old_addView =
+FS.Cards.CardStackPanel.prototype.addView;
+FS.Cards.CardStackPanel.prototype.addView = function(view, index) {
+    var ret = this.old_addView(view, index);
+    if (options.alwaysStack && this.autoStackCards) {
+	this.stackCards = true;
+    }
+    return ret;
+};
+
+
+
 //
 // Configuration module
 //
@@ -1056,6 +1140,8 @@ var default_options = {
     proranks: true,
     sortrating: true,
     adventurevp: true,
+    alwaysStack: false,
+    blacklist: [""]
 };
 var options = {};
 function options_save() {
@@ -1082,6 +1168,8 @@ function options_window() {
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
     h+= '<input name="adventurevp" type="checkbox">Victory point tracker in Adventures<br>';
+    h+= '<input name="always-stack" type="checkbox">Always stack same-named cards in hand<br>';
+    h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
 //    h+= '<input name="opt" style="width:95%"><br>';
     h+= '<div style="align:center;text-align:center"><input type="submit" value="Save"></div></form>';
     h+= '</div></div>';
@@ -1092,13 +1180,17 @@ function options_window() {
     $('#optform input[name="generator"]').prop('checked',options.generator);
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
+    $('#optform input[name="always-stack"]').prop('checked',options.alwaysStack);
     $('#optform input[name="adventurevp"]').prop('checked',options.adventurevp);
+    $('#optform textarea').val(options.blacklist.join("\n"));
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
 	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked'); 
+	options.alwaysStack = $('#optform input[name="always-stack"]').prop('checked');
 	options.adventurevp = $('#optform input[name="adventurevp"]').prop('checked'); 
+	options.blacklist = $('#optform textarea[name="blacklist"]').val().split("\n");
 	options_save();
 	$('#usersettings').hide();
 	return false;
