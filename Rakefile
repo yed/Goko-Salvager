@@ -16,8 +16,13 @@ CLOBBER.add '*.safariextz'
 # first line inside the main function of @script
 @start_of_foo = 13
 
-# lines of @script that load @parser remotely
-@import_lines = (1119..1121)
+# content of the first line in @parser to import @script
+@import_start = "	script.src = 'http://dom.retrobox.eu/js/1.0.0/set_parser.js';
+"
+
+# content of the first line in @script after the importing of @parser is complete
+@after_import_end = "	script.textContent = '('+ fn +')();';
+"
 
 @name = 'Dominion-Online-User-Extension'
 @version = File.read('VERSION').strip!
@@ -27,9 +32,12 @@ def insert_set_parser_into_main_script(out_file_name)
   out = File.new(out_file_name, 'w')
   File.open(@script) do |script|
     current_line = 1
+    skip_this_line = false
     script.each_line do |line|
       out.write(File.read(@parser)) if current_line == @start_of_foo
-      out.write(line) unless @import_lines.member? current_line
+      skip_this_line = true if line == @import_start
+      skip_this_line = false if line == @after_import_end
+      out.write(line) unless skip_this_line
       current_line += 1
     end
   end
