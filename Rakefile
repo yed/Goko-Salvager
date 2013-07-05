@@ -12,6 +12,7 @@ CLOBBER.add '*.safariextz'
 
 @script = 'Goko_Live_Log_Viewer.user.js'
 @parser = 'set_parser.js'
+@automatch = '../gokomatch/Goko_automatch.user.js'
 
 # first line inside the main function of @script
 @start_of_foo = 13
@@ -23,6 +24,12 @@ CLOBBER.add '*.safariextz'
 # content of the first line in @script after the importing of @parser is complete
 @after_import_end = "	script.textContent = '('+ fn +')();';
 "
+
+@host_line = '        host = "http://gokologs.drunkensailor.org"
+'
+
+@localhost_line = '        host = "http://localhost"
+'
 
 @name = 'Dominion-Online-User-Extension'
 @version = File.read('VERSION').strip!
@@ -42,6 +49,37 @@ def insert_set_parser_into_main_script(out_file_name)
     end
   end
   out.close
+end
+
+def insert_automatch_into_main_script
+  sh 'touch tmp'
+  out = File.new('tmp', 'w')
+  File.open(@script) do |script|
+    current_line = 1
+    script.each_line do |line|
+      if current_line == @start_of_foo
+        File.open(@automatch) do |automatch|
+          automatch.each_line do |a_line|
+            if a_line == @host_line
+              out.write(@localhost_line)
+            else
+              out.write(a_line)
+            end
+          end
+        end
+      end
+      out.write(line)
+      current_line += 1
+    end
+  end
+  out.close
+  FileUtils.mv 'tmp', @script
+end
+
+desc 'insert the automatch script into the main extension script'
+task :automatch do
+  insert_automatch_into_main_script
+  puts 'automatch script inserted into main script'
 end
 
 desc 'Use this directory as an "unpacked extension" for developing on Chrome'
