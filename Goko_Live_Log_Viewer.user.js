@@ -1019,7 +1019,7 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
 	    delete opts.$el;
 	}
     }
-    this.old_getRating(opts, newCallback);
+    FS.RatingHelper.prototype.old_getRating.call(this, opts, newCallback);
 };
 
 FS.ClassicRoomView.prototype.old_modifyDOM =
