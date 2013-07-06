@@ -62,7 +62,9 @@ def insert_automatch_into_main_script
             if a_line == @host_line
               out.write(@localhost_line)
             else
-              out.write(a_line)
+              out.write(a_line) unless a_line == "var foo = function () {
+" || a_line == "}; document.addEventListener ('DOMContentLoaded', foo);
+"
             end
           end
         end
