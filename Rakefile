@@ -52,7 +52,6 @@ def insert_set_parser_into_main_script(out_file_name)
 end
 
 def insert_automatch_into_main_script
-  sh 'touch tmp'
   out = File.new('tmp', 'w')
   File.open(@script) do |script|
     current_line = 1
