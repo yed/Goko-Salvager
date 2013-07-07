@@ -1002,8 +1002,8 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
     var newCallback = callback, playerElement;
     if (opts.$el && opts.$el.hasClass('player-rank')) {
 	playerElement = opts.$el.closest('li')[0];
-	newCallback = function () {
-	    callback();
+	newCallback = function (resp) {
+	    callback(resp);
 	    if (options.sortrating) {
 		insertInPlace(playerElement);
 	    }
@@ -1019,7 +1019,7 @@ FS.RatingHelper.prototype.getRating = function (opts, callback) {
 	    delete opts.$el;
 	}
     }
-    this.old_getRating(opts, newCallback);
+    FS.RatingHelper.prototype.old_getRating.call(this, opts, newCallback);
 };
 
 FS.ClassicRoomView.prototype.old_modifyDOM =
