@@ -6,9 +6,7 @@ CLEAN.include Dir.glob('./**/*~')
 CLEAN.include Dir.glob('./**/.*~')
 CLEAN.add 'images/'
 CLEAN.add 'manifest.json'
-CLEAN.add 'chrome/*.js'
-CLOBBER.add '*.zip'
-CLOBBER.add '*.safariextz'
+CLEAN.add 'chrome/src/*.js'
 
 @script = 'Goko_Live_Log_Viewer.user.js'
 @parser = 'set_parser.js'
@@ -86,15 +84,16 @@ end
 
 desc 'Use this directory as an "unpacked extension" for developing on Chrome'
 task :chrome_dev do
-  FileUtils.cp_r ['chrome/images', 'chrome/manifest.json'], '.'
+  FileUtils.cp_r ['chrome/src/images', 'chrome/src/manifest.json'], '.'
   puts 'ready to use this directory as unpacked extension'
 end
 
 desc 'Create a .zip file for publishing in the Chrome store'
 task :chrome_publish do
-  insert_set_parser_into_main_script "chrome/#{@script}"
-  sh "zip -r #{@versioned_name}.zip chrome"
-  puts "#{@versioned_name}.zip created and ready to publish"
+  insert_set_parser_into_main_script "chrome/src/#{@script}"
+  FileUtils.rm_rf "chrome/#{@versioned_name}.zip"
+  sh "cd chrome/src && zip -r ../#{@versioned_name}.zip . && cd -"
+  puts "chrome/#{@versioned_name}.zip created and ready to publish"
 end
 
 desc 'Create a Safari extension file for development'
@@ -102,17 +101,17 @@ task :safari_dev do
   tmp_ext_dir = "#{@name}.safariextension"
   FileUtils.mkdir_p tmp_ext_dir
   insert_set_parser_into_main_script "#{tmp_ext_dir}/#{@script}"
-  FileUtils.cp ['safari/Info.plist', 'safari/Settings.plist'],  tmp_ext_dir
+  FileUtils.cp ['safari/src/Info.plist', 'safari/src/Settings.plist'],  tmp_ext_dir
   sh 'safari/createAndSign.sh'
   FileUtils.rm_rf tmp_ext_dir
-  FileUtils.mv "#{@name}.safariextz", "#{@name}-dev.safariextz"
-  puts "#{@name}-dev.safariextz created"
+  FileUtils.mv "#{@name}.safariextz", "safari/#{@name}-dev.safariextz"
+  puts "safari/#{@name}-dev.safariextz created"
 end
 
 desc 'Create a versioned Safari extension file for publishing'
 task :safari_publish => [:safari_dev] do
-  FileUtils.mv "#{@name}-dev.safariextz", "#{@versioned_name}.safariextz"
-  puts "#{@name}-dev.safariextz renamed to #{@versioned_name}.safariextz"
+  FileUtils.mv "safari/#{@name}-dev.safariextz", "safari/#{@versioned_name}.safariextz"
+  puts "safari/#{@name}-dev.safariextz renamed to safari/#{@versioned_name}.safariextz"
 end
 
 desc 'Use this directory as an "unpacked extension" for developing on Opera'
