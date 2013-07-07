@@ -24,10 +24,10 @@ CLEAN.add 'chrome/src/*.js'
 @after_import_end = "	script.textContent = '('+ fn +')();';
 "
 
-@host_line = '        host = "http://gokologs.drunkensailor.org"
+@host_line = '        host = "http://gokologs.drunkensailor.org";
 '
 
-@localhost_line = '        host = "http://localhost"
+@localhost_line = '        host = "http://localhost";
 '
 
 @name = 'Dominion-Online-User-Extension'
