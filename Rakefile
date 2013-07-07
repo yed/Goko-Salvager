@@ -16,6 +16,7 @@ CLOBBER.add '*.safariextz'
 
 # first line inside the main function of @script
 @start_of_foo = 13
+@end_of_foo = 1204
 
 # content of the first line in @parser to import @script
 @import_start = "	script.src = 'http://dom.retrobox.eu/js/1.0.0/set_parser.js';
@@ -56,7 +57,7 @@ def insert_automatch_into_main_script
   File.open(@script) do |script|
     current_line = 1
     script.each_line do |line|
-      if current_line == @start_of_foo
+      if current_line == @end_of_foo
         File.open(@automatch) do |automatch|
           automatch.each_line do |a_line|
             if a_line == @host_line
