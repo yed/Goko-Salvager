@@ -1,14 +1,24 @@
 # encoding: UTF-8
 
+# chrome/src/manifest.json depends on VERSION and chrome/src/images/icon##.png (at least their names)
+# build/#{chrome_package} depends on chrome/src/manifest.json, chrome/src/images/*, @parser, @script
+
+# build/#{safari_packge} depends on safari/src/*; safari/src/Info.plist depends on VERSION
+
+# in chrome_dev, images/ and manifest.json depend on chrome/src/*
+
+# :automatch depends on @automatch and @script -- need some way to detect if already inserted, or figure out how to do use both without just shoving it in
+
+# how to organize? dev:automatch, dev:chrome, dev:safari, build, build:chrome, build:safari, version, etc.
+
 require 'rake/clean'
 
 CLEAN.include Dir.glob('./**/*~')
 CLEAN.include Dir.glob('./**/.*~')
-CLEAN.add 'images/'
-CLEAN.add 'manifest.json'
-CLEAN.add 'chrome/src/*.js'
-
-CLOBBER.add 'build/'
+CLEAN.include 'images/'
+CLEAN.include 'manifest.json'
+CLEAN.include 'chrome/src/*.js'
+CLOBBER.include 'build/*'
 
 @script = 'Goko_Live_Log_Viewer.user.js'
 @parser = 'set_parser.js'
@@ -33,10 +43,10 @@ CLOBBER.add 'build/'
 '
 
 @name = 'Dominion-Online-User-Extension'
-@version = File.read('VERSION').strip!
+@version = File.read('VERSION').strip
 @versioned_name = "#{@name}-#{@version}"
 
-def insert_set_parser_into_main_script(out_file_name)
+def insert_set_parser_into_main_script out_file_name
   out = File.new(out_file_name, 'w')
   File.open(@script) do |script|
     current_line = 1
@@ -77,6 +87,56 @@ def insert_automatch_into_main_script
   out.close
   FileUtils.mv 'tmp', @script
 end
+
+
+
+
+# TODO: improve this version stuff: maybe use ruby's FileList to generate the file tasks, with a hash to map files to their version string functions
+def increment_version
+  version_parts = @version.split('.')
+  version_parts[2] = version_parts[2].to_i + 1
+  version_parts.join('.')
+end
+
+task :update_version, :new_version do |t, args|
+  @version = args[:new_version] || increment_version
+  File.open("VERSION", "w") {|f| f.puts @version}
+end
+
+def update_version_in_file old, new, target
+  text = File.read(target)
+  replace = text.gsub(/#{old}/, "#{new}")
+  File.open(target, "w") {|f| f.puts replace}
+end
+
+file "chrome/src/manifest.json" => "VERSION" do |t|
+  def manifest_version v
+    "\"version\": \"#{v}\","
+  end
+  old_v_pattern = ".*"
+  update_version_in_file (manifest_version old_v_pattern), (manifest_version @version), t.name
+end
+
+file "safari/src/Info.plist" => "VERSION" do |t|
+  def info_version v
+    "	<key>CFBundleShortVersionString</key>
+	<string>#{v}<\/string>
+"
+  end
+  def info_version_2 v
+    "	<key>CFBundleVersion</key>
+	<string>#{v}<\/string>
+"
+  end
+  old_v_pattern = ".*"
+  update_version_in_file (info_version old_v_pattern), (info_version @version), t.name
+  update_version_in_file (info_version_2 old_v_pattern), (info_version_2 @version), t.name
+end
+
+desc 'Increment the version number by 0.0.1, or set a new version'
+task :version, [:new_version] => [:update_version, "chrome/src/manifest.json", "safari/src/Info.plist"]
+
+
 
 desc 'insert the automatch script into the main extension script'
 task :automatch do
