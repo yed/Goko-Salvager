@@ -12,7 +12,7 @@ CLOBBER.add 'build/'
 
 @script = 'Goko_Live_Log_Viewer.user.js'
 @parser = 'set_parser.js'
-@automatch = '../gokomatch/Goko_automatch.user.js'
+@automatch = '../goko-dominion-tools/web/Goko_automatch.user.js'
 
 # first line inside the main function of @script
 @start_of_foo = 13
