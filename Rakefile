@@ -8,6 +8,8 @@ CLEAN.add 'images/'
 CLEAN.add 'manifest.json'
 CLEAN.add 'chrome/src/*.js'
 
+CLOBBER.add 'build/'
+
 @script = 'Goko_Live_Log_Viewer.user.js'
 @parser = 'set_parser.js'
 @automatch = '../gokomatch/Goko_automatch.user.js'
@@ -92,8 +94,8 @@ desc 'Create a .zip file for publishing in the Chrome store'
 task :chrome_publish do
   insert_set_parser_into_main_script "chrome/src/#{@script}"
   FileUtils.rm_rf "chrome/#{@versioned_name}.zip"
-  sh "cd chrome/src && zip -r ../#{@versioned_name}.zip . && cd -"
-  puts "chrome/#{@versioned_name}.zip created and ready to publish"
+  sh "cd chrome/src && zip -r ../../build/#{@versioned_name}.zip . && cd -"
+  puts "build/#{@versioned_name}.zip created and ready to publish"
 end
 
 desc 'Create a Safari extension file for development'
@@ -104,14 +106,14 @@ task :safari_dev do
   FileUtils.cp ['safari/src/Info.plist', 'safari/src/Settings.plist'],  tmp_ext_dir
   sh 'safari/createAndSign.sh'
   FileUtils.rm_rf tmp_ext_dir
-  FileUtils.mv "#{@name}.safariextz", "safari/#{@name}-dev.safariextz"
-  puts "safari/#{@name}-dev.safariextz created"
+  FileUtils.mv "#{@name}.safariextz", "build/#{@name}-dev.safariextz"
+  puts "build/#{@name}-dev.safariextz created"
 end
 
 desc 'Create a versioned Safari extension file for publishing'
 task :safari_publish => [:safari_dev] do
-  FileUtils.mv "safari/#{@name}-dev.safariextz", "safari/#{@versioned_name}.safariextz"
-  puts "safari/#{@name}-dev.safariextz renamed to safari/#{@versioned_name}.safariextz"
+  FileUtils.mv "build/#{@name}-dev.safariextz", "build/#{@versioned_name}.safariextz"
+  puts "build/#{@name}-dev.safariextz renamed to build/#{@versioned_name}.safariextz"
 end
 
 desc 'Use this directory as an "unpacked extension" for developing on Opera'
