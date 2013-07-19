@@ -602,47 +602,65 @@ Dom.DominionWindow.prototype._moveCards = function(options, callback) {
 
 var old_onIncomingMessage = DominionClient.prototype.onIncomingMessage;
 DominionClient.prototype.onIncomingMessage = function(messageName, messageData, message) {
+    var msgSend = "", sendVpOn = false, sendVpOff = false, tablename;
+
     try {
-//    if (messageName != 'messageGroup' && messageName != 'gamePingMessage')
-//	console.log(messageName + JSON.stringify(messageData));
+
+    tablename = JSON.parse(this.table.get("settings")).name;
+
     if (messageName == 'RoomChat') {
-	if (messageData.text.toUpperCase() == '#VPOFF' && (vpOn || !vpLocked)) {
+	console.log(messageData.text);
+
+	if (messageData.text == "Dominion Online User Extension enabled (see goo.gl/4muRB)\nType \"#vpon\" before turn 5 to turn on point tracker.\nType \"#vpoff\" before turn 5 to disallow the point tracker.\n" &&
+
+	    options.vpAlwaysOff &&
+	    tablename.toUpperCase().indexOf("#VPON") === -1) {
+
+	    sendVpOff = true;
+	}
+
+	if (options.vpEnabled && messageData.text.toUpperCase() == '#VPOFF' && (vpOn || !vpLocked)) {
 	    if (vpLocked) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker setting locked'});
+		msgSend += 'Victory Point tracker setting locked\n';
 	    } else {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker disallowed'});
+		msgSend += 'Victory Point tracker disallowed\n';
 		vpOn = false;
 		vpLocked = true;
 	    }
-	} else if (messageData.text.toUpperCase() == '#VPON' && !vpOn) {
+	} else if (options.vpEnabled && messageData.text.toUpperCase() == '#VPON' && !vpOn) {
 	    if (vpLocked) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker setting locked'});
+		msgSend += 'Victory Point tracker setting locked\n';
 	    } else {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)'});
-		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
+		msgSend += 'Victory Point tracker enabled (see http://dom.retrobox.eu/vp.html)\n';
+		msgSend += 'Type "#vp?" at any time to display the score in the chat\n';
+		msgSend += 'Type "#vpoff" before turn 5 to disallow the point tracker.\n';
 		vpOn = true;
 	    }
-	} else if (messageData.text.toUpperCase() == '#VP?' && vpOn) {
-	    this.clientConnection.send('sendChat',{text:'Current points: ' + vp_txt()});
+	} else if (options.vpEnabled && messageData.text.toUpperCase() == '#VP?' && vpOn) {
+	    msgSend += 'Current points: ' + vp_txt() + '\n';
 	}
-    } else if (messageName == 'addLog' && messageData.text == '------------ Game Setup ------------') {
+    } else if (messageName == 'gameEvent2' && messageData.code == 'system.startGame') {
 	vpOn = false;
 	vpLocked = false;
-	var tablename = JSON.parse(this.table.get("settings")).name;
 	if (tablename) {
 	    tablename = tablename.toUpperCase();
-	    this.clientConnection.send('sendChat', {text: 'Dominion Online User Extension enabled (see goo.gl/4muRB)'});
-	    if (tablename.indexOf("#VPON") != -1) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker enabled and locked (see http://dom.retrobox.eu/vp.html)'});
-		this.clientConnection.send('sendChat',{text:'type "#vp?" at any time to display the score in the chat'});
+	    msgSend += 'Dominion Online User Extension enabled (see goo.gl/4muRB)\n';
+	    if (options.vpEnabled && tablename.indexOf("#VPON") != -1) {
+		msgSend += 'Victory Point tracker enabled and locked (see http://dom.retrobox.eu/vp.html)\n';
+		msgSend += 'Type "#vp?" at any time to display the score in the chat\n';
+
 		vpOn = true;
 		vpLocked = true;
-	    } else if (tablename.indexOf("#VPOFF") != -1) {
-		this.clientConnection.send('sendChat',{text:'Victory Point tracker disallowed and locked (see http://dom.retrobox.eu/vp.html)'});
+	    } else if (options.vpEnabled && tablename.indexOf("#VPOFF") != -1) {
+		msgSend += 'Victory Point tracker disallowed and locked (see http://dom.retrobox.eu/vp.html)\n';
+
 		vpOn = false;
 		vpLocked = true;
-	    } else {
-		this.clientConnection.send('sendChat',{text:'Type "#vpon" before turn 5 to enable point tracker; type "#vpoff" before turn 5 to disallow the point tracker.'});
+	    } else if (options.vpEnabled && options.vpAlwaysOn) {
+		sendVpOn = true;
+	    } else if (options.vpEnabled) {
+		msgSend += 'Type "#vpon" before turn 5 to turn on point tracker.\n';
+		msgSend += 'Type "#vpoff" before turn 5 to disallow the point tracker.\n';
 	    }
 	}
     } else if (messageName == 'addLog' && messageData.text == 'Rating system: adventure' && options.adventurevp) {
@@ -651,6 +669,17 @@ DominionClient.prototype.onIncomingMessage = function(messageName, messageData, 
     } catch (e) {
 	console.log('exception :' + e);
     }
+
+    if (msgSend.length > 0) {
+	this.clientConnection.send('sendChat',{text: msgSend});
+    }
+
+    if (sendVpOn) {
+	this.clientConnection.send('sendChat',{text: "#vpon"});
+    } else if (sendVpOff) {
+	this.clientConnection.send('sendChat',{text: "#vpoff"});
+    }
+
     old_onIncomingMessage.call(this, messageName, messageData, message);
 }
 
@@ -1140,6 +1169,9 @@ var default_options = {
     proranks: true,
     sortrating: true,
     adventurevp: true,
+    vpEnabled: true,
+    vpAlwaysOn: false,
+    vpAlwaysOff: false,
     alwaysStack: false,
     blacklist: [""]
 };
@@ -1167,6 +1199,9 @@ function options_window() {
     h+= '<input name="generator" type="checkbox">Kingdom generator (see <a target="_blank" href="http://dom.retrobox.eu/kingdomgenerator.html">instructions</a>)<br>';
     h+= '<input name="proranks" type="checkbox">Show pro rankings in the lobby<br>';
     h+= '<input name="sort-rating" type="checkbox">Sort players by rating<br>';
+    h+= '<input name="vp-enabled" id="vp-enabled" type="checkbox">Enable Victory point tracker<br>';
+    h+= '<span id="vp-always-on"><input name="vp-always-on" type="checkbox" style="margin-left:20px">always turn on (unless "#vpoff" in game title)<br></span>';
+    h+= '<span id="vp-always-off"><input name="vp-always-off" id="vp-always-off" type="checkbox" style="margin-left:20px">always turn off tracker for other extension users (unless "#vpon" in game title)<br></span>';
     h+= '<input name="adventurevp" type="checkbox">Victory point tracker in Adventures<br>';
     h+= '<input name="always-stack" type="checkbox">Always stack same-named cards in hand<br>';
     h+= 'Personal Black List: (one player name per line)<br><textarea name="blacklist"></textarea><br>';
@@ -1181,20 +1216,46 @@ function options_window() {
     $('#optform input[name="proranks"]').prop('checked',options.proranks);
     $('#optform input[name="sort-rating"]').prop('checked',options.sortrating);
     $('#optform input[name="always-stack"]').prop('checked',options.alwaysStack);
+    $('#optform input[name="vp-enabled"]').prop('checked',options.vpEnabled);
+    $('#optform input[name="vp-always-on"]').prop('checked',options.vpAlwaysOn);
+    $('#optform input[name="vp-always-off"]').prop('checked',options.vpAlwaysOff);
     $('#optform input[name="adventurevp"]').prop('checked',options.adventurevp);
     $('#optform textarea').val(options.blacklist.join("\n"));
     document.getElementById('optform').onsubmit = function () {
 	options.autokick = $('#optform input[name="autokick"]').prop('checked');
 	options.generator = $('#optform input[name="generator"]').prop('checked');
 	options.proranks = $('#optform input[name="proranks"]').prop('checked');
-	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked'); 
+	options.sortrating = $('#optform input[name="sort-rating"]').prop('checked');
 	options.alwaysStack = $('#optform input[name="always-stack"]').prop('checked');
-	options.adventurevp = $('#optform input[name="adventurevp"]').prop('checked'); 
+	options.vpEnabled = $('#optform input[name="vp-enabled"]').prop('checked');
+	options.vpAlwaysOn = $('#optform input[name="vp-always-on"]').prop('checked');
+	options.vpAlwaysOff = $('#optform input[name="vp-always-off"]').prop('checked');
+	options.adventurevp = $('#optform input[name="adventurevp"]').prop('checked');
 	options.blacklist = $('#optform textarea[name="blacklist"]').val().split("\n");
 	options_save();
 	$('#usersettings').hide();
 	return false;
     };
+
+    var vpEnabledClicked = function () {
+      var el = document.getElementById("vp-enabled"),
+          alwaysOn = document.getElementById("vp-always-on"),
+          alwaysOff = document.getElementById("vp-always-off"),
+          vpEnabled = el.checked;
+      if (vpEnabled) {
+        $(alwaysOn).show();
+        $(alwaysOff).hide();
+        $(alwaysOff).find("input")[0].checked = false;
+      } else {
+        $(alwaysOn).hide();
+        $(alwaysOn).find("input")[0].checked = false;
+        $(alwaysOff).show();
+      }
+    };
+
+    document.getElementById('vp-enabled').onclick = vpEnabledClicked;
+
+    vpEnabledClicked();
 }
 options_load();
 options_window();
