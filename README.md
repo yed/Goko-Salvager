@@ -14,7 +14,7 @@ Installation
 Contributing
 ------------
 1. Fork it
-2. Keep modifications to `Goko_Live_Log_Viewer.user.js` and `set_parser.js`, in `features` (this keeps merging with [nutki's repo](github.com/nutki/Goko-Live-Log-Viewer) simple)
+2. Keep modifications to `Goko_Live_Log_Viewer.user.js` and `set_parser.js`, in `features` (this keeps merging with [nutki's repo](https://github.com/nutki/Goko-Live-Log-Viewer) simple)
 3. Keep all other changes in `master`; do not modify `VERSION`
 4. Send a pull request
 
