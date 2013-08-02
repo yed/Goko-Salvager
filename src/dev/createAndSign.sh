@@ -9,3 +9,4 @@ $XAR --sign -f $EXTENSION.safariextz --digestinfo-to-sign digest.dat --sig-size 
 openssl rsautl -sign -inkey $CERT_DIR/key.pem -in digest.dat -out sig.dat
 $XAR --inject-sig sig.dat -f $EXTENSION.safariextz
 rm -f sig.dat digest.dat
+chmod 744 $EXTENSION.safariextz
