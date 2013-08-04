@@ -28,8 +28,8 @@ var loadAutomatchExtension = function () {
             AM.initialize()
         }
 
-        // Log events in test environment
-        AM.testing && console.log(arguments);
+        // Log Connection events in test environment
+        //AM.testing && console.log(arguments);
 
         // Invoke normal Goko event dispatching
         FS.Connection.prototype.trigger_old.apply(this, arguments);
@@ -58,9 +58,10 @@ var loadAutomatchExtension = function () {
         AM.fetchOwnSets();      // (async)
 
         // Connect to automatch server via websocket (async)
-        url = ['ws://gokologs.drunkensailor.org',
-               (AM.testing ? ':8080' : ''),
-               '/automatch?pname=', AM.player.pname].join('');
+        var url = ['ws://gokologs.drunkensailor.org',
+                   (AM.testing ? ':8080' : ''),
+                   '/automatch?pname=', AM.player.pname].join('');
+        AM.testing && console.log('Automatch server: ' + url);
         AM.connectToAutomatchServer(url);
 
         // Create automatch popup dialogs
@@ -68,17 +69,9 @@ var loadAutomatchExtension = function () {
         AM.appendOfferPopup($('#viewport'));
         AM.appendGamePopup($('#viewport'));
 
-        // Replace "Play Now" button with "Automatch" button
-        $('.room-section-header-buttons').append(
-            $('<button id="automatchButton"></button>')
-                .addClass('fs-mtrm-text-border')
-                .addClass('fs-mtrm-dominion-btn')
-                .html('Automatch'));
-        $('#automatchButton').click(function() {
-            console.log('AM Button clicked');
-            AM.showSeekPop(true);
-        });
-        $('.room-section-btn-find-table').remove();
+        // Wait for the Lobby Menu to be created, then replace the
+        // "Play Now" button with "Automatch" button.
+        AM.addAutomatchButtonWhenPossible();
 
         // Notify server to stop automatching on game start
         AM.gokoconn.bind(AM.GAME_START, function () {
@@ -91,6 +84,29 @@ var loadAutomatchExtension = function () {
         // TODO: stop refreshing on room changes.
         AM.gokoconn.bind(FS.MeetingRoomEvents.MEETING_ROOM.GATEWAY_CONNECT, AM.fetchOwnRatings);
     };
+
+    AM.addAutomatchButtonWhenPossible = function () {
+        var intvl = setInterval(function () {
+            if ($('.room-section-header-buttons').length === 1) {
+                clearInterval(intvl);
+                AM.testing && console.log("Replacing Play Now with Automatch");
+            
+                // Replace "Play Now" button with "Automatch" button
+                $('.room-section-header-buttons').append(
+                    $('<button id="automatchButton"></button>')
+                        .addClass('fs-mtrm-text-border')
+                        .addClass('fs-mtrm-dominion-btn')
+                        .html('Automatch'));
+    
+                $('#automatchButton').click(function() {
+                    console.log('AM Button clicked');
+                    AM.showSeekPop(true);
+                });
+    
+                $('.room-section-btn-find-table').remove();
+            }
+        },500);
+    }
 
     // Request Goko casual and pro ratings (async)
     AM.fetchOwnRatings = function () {
@@ -177,7 +193,7 @@ var loadAutomatchExtension = function () {
         };
     };
 
-    AM.connectToAutomatchServer = function () {
+    AM.connectToAutomatchServer = function (url) {
 
         // Open connection asynchronously
         AM.ws = new WebSocket(url);
