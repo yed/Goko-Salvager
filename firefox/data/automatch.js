@@ -14,7 +14,7 @@ var loadAutomatchExtension = function () {
     AM.PRO_SYS_ID = '501726b67af16c2af2fc9c54';
 
     // TODO: get testing param from extension options
-    AM.testing = true;
+    AM.testing = false;
 
     // Automatch initialization requires the Goko websocket FS.Connection.
     // Hijack Goko event dispatching to get it.
