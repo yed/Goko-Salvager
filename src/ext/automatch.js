@@ -58,7 +58,7 @@ var loadAutomatchExtension = function () {
         AM.fetchOwnSets();      // (async)
 
         // Connect to automatch server via websocket (async)
-        var url = ['ws://gokologs.drunkensailor.org',
+        var url = ['wss://gokologs.drunkensailor.org',
                    (AM.testing ? ':8080' : ''),
                    '/automatch?pname=', AM.player.pname].join('');
         AM.testing && console.log('Automatch server: ' + url);
