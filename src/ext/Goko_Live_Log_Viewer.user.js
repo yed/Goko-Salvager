@@ -1,15 +1,3 @@
-// ==UserScript==
-// @name        Dominion Online Live Log Viewer
-// @namespace   http://dom.retrobox.eu
-// @description Dominion Online Live Log Viewer
-// @include     http://play.goko.com/Dominion/gameClient.html
-// @include     https://play.goko.com/Dominion/gameClient.html
-// @require     http://dom.retrobox.eu/js/1.0.0/set_parser.js
-// @run-at      document-end
-// @grant       none
-// @version     15
-// ==/UserScript==
-var foo = function () {
 var _foo = function () {
 
 if (Dom.LogManager.prototype.old_addLog) {
@@ -1276,16 +1264,3 @@ var intvl = setInterval(function () {
             _foo();
     }
 },100);
-
-};
-
-var script = document.createElement('script');
-script.src = 'http://dom.retrobox.eu/js/1.0.0/set_parser.js';
-document.body.appendChild(script);
-
-var runInPageContext = function(fn) {
-    script = document.createElement('script');
-    script.textContent = '('+ fn +')();';
-    document.body.appendChild(script);
-}
-runInPageContext(foo);

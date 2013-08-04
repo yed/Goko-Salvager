@@ -1,48 +1,47 @@
 # encoding: UTF-8
 
-def versioned_name
-  "#{NAME}-#{get_version}"
-end
-
-def insert_set_parser_into_main_script(out_file_name)
-  out = File.new(out_file_name, 'w')
-  out.write(File.read(PARSER))
-  out.write(File.read(SCRIPT))
-  out.close
-end
-
-def run_in_page_context(file)
-  f = File.read(file)
-  t = File.new(file, 'w')
-  File.open(WRAPPER) do |w|
-    w.each_line do |l|
-      t.write(l.strip == '// insert file here' ? f : l)
-    end
-  end
-  t.close
-end
-
 # TODO - set up the builds with proper dependencies
 namespace :build do
 
-  desc 'Create a .zip file for publishing in the Chrome store'
+  desc 'Create a .zip for Chrome'
+
+  desc 'Create a .zip for Chrome'
   task :chrome do
-    insert_set_parser_into_main_script('chrome/Goko_Live_Log_Viewer.user.js')
-    run_in_page_context('chrome/Goko_Live_Log_Viewer.user.js')
-    sh "cd chrome && zip -r ../build/#{versioned_name}.zip . && cd -"
-    puts "build/#{versioned_name}.zip created and ready to publish"
+    FileUtils.mkdir_p 'build/'
+    FileUtils.cp_r 'chrome/', 'build/chrome/'
+
+    insert_set_parser_into_main_script('build/chrome/Goko_Live_Log_Viewer.user.js')
+    run_in_page_context('build/chrome/Goko_Live_Log_Viewer.user.js')
+
+    sh 'cd build/chrome && zip -r ../gokosalvager.zip . && cd -'
+    puts 'build/gokosalvager.zip created'
   end
 
-  desc 'Create a signed .safariextz'
+  desc 'Create a .xpi for Firefox'
+  task :firefox do
+    FileUtils.mkdir_p 'build/'
+    FileUtils.cp_r 'firefox/', 'build/firefox/'
+    FileUtils.cp_r Dir.glob('src/ext/*.js'), 'build/firefox/data/'
+
+    insert_set_parser_into_main_script('build/firefox/data/logviewer.js')
+    run_in_page_context('build/firefox/data/logviewer.js')
+
+    FileUtils.rm 'build/firefox/data/Goko_Live_Log_Viewer.user.js'
+
+    sh 'cd build/ && cfx xpi --pkgdir=firefox/'
+    puts 'build/gokosalvager.xpi created'
+  end
+
+  desc 'Create a signed .safariextz for Safari'
   task :safari do
-    tmp_ext_dir = "#{NAME}.safariextension"
-    FileUtils.mkdir_p tmp_ext_dir
-    insert_set_parser_into_main_script("#{tmp_ext_dir}/#{SCRIPT}")
-    run_in_page_context("#{tmp_ext_dir}/#{SCRIPT}")
-    FileUtils.cp [SAFARI_INFO, SAFARI_SETTINGS],  tmp_ext_dir
-    sh '#{ CREATE_AND_SIGN }'
-    FileUtils.rm_rf tmp_ext_dir
-    FileUtils.mv "#{NAME}.safariextz", "build/#{versioned_name}.safariextz"
-    puts "build/#{versioned_name}.safariextz created"
+    FileUtils.mkdir_p 'gokosalvager.safariextension'
+
+    insert_set_parser_into_main_script('gokosalvager.safariextension/Goko_Live_Log_Viewer.user.js')
+    run_in_page_context('gokosalvager.safariextension/Goko_Live_Log_Viewer.user.js')
+
+    FileUtils.cp [SAFARI_INFO, SAFARI_SETTINGS],  'gokosalvager.safariextension/'
+    sh CREATE_AND_SIGN
+    FileUtils.mv ['gokosalvager.safariextz', 'gokosalvager.safariextension'], 'build/'
+    puts 'gokosalvager.safariextz created'
   end
 end

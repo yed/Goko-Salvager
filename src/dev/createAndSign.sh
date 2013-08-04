@@ -1,6 +1,6 @@
 XAR=xar
 CERT_DIR=~/.safari-certs
-EXTENSION="Dominion-Online-User-Extension"
+EXTENSION="gokosalvager"
 
 openssl dgst -sign $CERT_DIR/key.pem -binary < $CERT_DIR/key.pem | wc -c > $CERT_DIR/size.txt
 

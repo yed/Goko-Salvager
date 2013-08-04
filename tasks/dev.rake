@@ -3,8 +3,7 @@
 DEV_BROWSER_INFO = {
   chrome: {
     'tmp/manifest.json' => CHROME_MANIFEST,
-    'tmp/images/' => CHROME_IMAGES,
-    'tmp/' => 'src/ext/*'
+    'tmp/images/' => CHROME_IMAGES
   }
 }
 
@@ -18,8 +17,13 @@ namespace :dev do
     end
   end
 
-  desc 'Use this directory as an "unpacked extension" for developing on Chrome (or Opera)'
-  task chrome: DEV_BROWSER_INFO[:chrome].keys do
+  file 'tmp/Goko_Live_Log_Viewer.user.js' => [SCRIPT, PARSER, WRAPPER] do |t|
+    insert_set_parser_into_main_script(t.name)
+    run_in_page_context(t.name)
+  end
+
+  desc 'Use tmp/ as an "unpacked extension" for developing on Chrome (or Opera)'
+  task chrome: [DEV_BROWSER_INFO[:chrome].keys, 'tmp/Goko_Live_Log_Viewer.user.js'].flatten do
     puts 'ready to use tmp/ as unpacked extension'
   end
 end
