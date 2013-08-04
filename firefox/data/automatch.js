@@ -44,8 +44,8 @@ var loadAutomatchExtension = function () {
 
         // Cache Goko connection and ZoneClassicHelper
         // NOTE: We know where Goko keeps these objects, but let's not depend
-        //       on their location in more lines of code than necessary.
-        AM.gokoconn = window.conn;
+        //       on that in more places in the code than necessary.
+        AM.gokoconn = window.mtgRoom.conn;
         AM.zch = window.mtgRoom.helpers.ZoneClassicHelper;
 
         // Get goko player info

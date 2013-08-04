@@ -26,10 +26,6 @@ var defineGokoHelperFunctions = function() {
         });
     }
 
-    /*
-     * Helper functions not directly related to automatch
-     */
-
     AM.getRoom = function(roomName) {
         return mtgRoom.roomList.models.filter(function(m) {
             return m.get('name') == roomName;

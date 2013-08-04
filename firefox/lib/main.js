@@ -14,7 +14,8 @@ pageMod.PageMod({
     contentScriptWhen: "ready",
 
     // Run the extension scripts in the Firefox JS context
-    contentScriptFile: [ self.data.url("gokoHelpers.js"),
+    contentScriptFile: [ self.data.url("logviewer.js"),
+                         self.data.url("gokoHelpers.js"),
                          self.data.url("automatchSeekPop.js"),
                          self.data.url("automatchOfferPop.js"),
                          self.data.url("automatchGamePop.js"),
