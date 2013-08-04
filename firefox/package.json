@@ -1,0 +1,12 @@
+{
+  "name": "gokosalvager",
+  "fullName": "Goko Salvager",
+  "id": "jid1-R9otFQC4GvKlUQ",
+  "description": "\"Making Goko almost tolerable\"",
+  "author": "",
+  "contributors": ["michaeljb", "ragingduckd", "nutki"],
+  "icon": "data/salvager48.png",
+  "homepage": "http://forum.dominionstrategy.com",
+  "license": "MPL 2.0",
+  "version": "16"
+}
