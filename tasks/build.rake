@@ -36,6 +36,7 @@ namespace :build do
   desc 'Create a signed .safariextz for Safari'
   task :safari do
     FileUtils.mkdir_p 'gokosalvager.safariextension'
+    FileUtils.cp_r Dir.glob('src/ext/*.js'), 'gokosalvager.safariextension/'
 
     insert_set_parser_into_main_script('gokosalvager.safariextension/Goko_Live_Log_Viewer.user.js')
     run_in_page_context('gokosalvager.safariextension/Goko_Live_Log_Viewer.user.js')
