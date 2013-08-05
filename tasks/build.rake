@@ -9,6 +9,7 @@ namespace :build do
   task :chrome do
     FileUtils.mkdir_p 'build/'
     FileUtils.cp_r 'chrome/', 'build/chrome/'
+    FileUtils.cp_r Dir.glob('src/ext/*.js'), 'build/chrome/'
 
     insert_set_parser_into_main_script('build/chrome/Goko_Live_Log_Viewer.user.js')
     run_in_page_context('build/chrome/Goko_Live_Log_Viewer.user.js')

@@ -3,7 +3,12 @@
 DEV_BROWSER_INFO = {
   chrome: {
     'tmp/manifest.json' => CHROME_MANIFEST,
-    'tmp/images/' => CHROME_IMAGES
+    'tmp/images/' => CHROME_IMAGES,
+    'tmp/automatch.js' => 'src/ext/automatch.js',
+    'tmp/automatchGamePop.js' => 'src/ext/automatchGamePop.js',
+    'tmp/automatchOfferPop.js' => 'src/ext/automatchOfferPop.js',
+    'tmp/automatchSeekPop.js' => 'src/ext/automatchSeekPop.js',
+    'tmp/gokoHelpers.js' => 'src/ext/gokoHelpers.js'
   }
 }
 

@@ -20,8 +20,6 @@ CHROME_IMAGES = 'chrome/images/'
 SAFARI_INFO = 'safari/Info.plist'
 SAFARI_SETTINGS = 'safari/Settings.plist'
 
-NAME = 'Dominion-Online-User-Extension'
-
 def get_version
   File.read(VERSION).strip
 end
