@@ -48,3 +48,6 @@ def run_in_page_context(file)
 end
 
 Dir.glob('tasks/*.rake').each { |r| import r }
+
+desc 'Build packages for all supported browsers'
+task :default => ['build:chrome', 'build:firefox', 'build:safari']
