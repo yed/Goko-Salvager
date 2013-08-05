@@ -1,9 +1,18 @@
 // To be executed in Goko's namespace
 var loadAutomatchExtension = function () {
+    "use strict";
+    var AM, testlog;
 
     // Automatch namespace
-    if (typeof AM === 'undefined') {
-       AM = {};
+    if (!window.hasOwnProperty('AM')) {
+        window.AM = {};
+    }
+    AM = window.AM;
+
+    testlog = function (str) {
+        if (AM.testing) {
+            console.log(str);
+        }
     };
 
     // Goko constants
@@ -25,11 +34,11 @@ var loadAutomatchExtension = function () {
         // Initialize Automatch with Goko's FS.Connection object
         if (!AM.initialized) {
             AM.initialized = true;
-            AM.initialize()
+            AM.initialize();
         }
 
         // Log Connection events in test environment
-        //AM.testing && console.log(arguments);
+        //testlog(arguments);
 
         // Invoke normal Goko event dispatching
         FS.Connection.prototype.trigger_old.apply(this, arguments);
@@ -37,7 +46,7 @@ var loadAutomatchExtension = function () {
 
     // Should only be called after Goko's connection and mtgRoom objects exist
     AM.initialize = function (gokoconn) {
-        AM.testing && console.log('Initializing Automatch');
+        testlog('Initializing Automatch');
 
         // Automatch status (seeking, received offer, game announced)
         AM.state = {seek: null, offer: null, game: null};
@@ -58,11 +67,11 @@ var loadAutomatchExtension = function () {
         AM.fetchOwnSets();      // (async)
 
         // Connect to automatch server via websocket (async)
-        AM.url = ['wss://gokologs.drunkensailor.org',
+        var url = ['wss://gokologs.drunkensailor.org',
                    (AM.testing ? ':8080' : ''),
                    '/automatch?pname=', AM.player.pname].join('');
-        AM.testing && console.log('Automatch server: ' + AM.url);
-        AM.connectToAutomatchServer();
+        testlog('Automatch server: ' + url);
+        AM.connectToAutomatchServer(url);
 
         // Create automatch popup dialogs
         AM.appendSeekPopup($('#viewport'));
@@ -75,7 +84,7 @@ var loadAutomatchExtension = function () {
 
         // Notify server to stop automatching on game start
         AM.gokoconn.bind(AM.GAME_START, function () {
-            AM.testing && console.log('Game started');
+            testlog('Game started');
             AM.sendMessage('GAME_STARTED', {game: AM.state.game});
             AM.state = {seek: null, offer: null, game: null};
         });
@@ -89,40 +98,41 @@ var loadAutomatchExtension = function () {
         var intvl = setInterval(function () {
             if ($('.room-section-header-buttons').length === 1) {
                 clearInterval(intvl);
-                AM.testing && console.log("Replacing Play Now with Automatch");
-            
+                testlog("Replacing Play Now with Automatch");
+
                 // Replace "Play Now" button with "Automatch" button
                 $('.room-section-header-buttons').append(
                     $('<button id="automatchButton"></button>')
                         .addClass('fs-mtrm-text-border')
                         .addClass('fs-mtrm-dominion-btn')
-                        .html('Automatch'));
-    
-                $('#automatchButton').click(function() {
+                        .html('Automatch')
+                );
+
+                $('#automatchButton').click(function () {
                     console.log('AM Button clicked');
                     AM.showSeekPop(true);
                 });
-    
+
                 $('.room-section-btn-find-table').remove();
             }
-        },500);
-    }
+        }, 500);
+    };
 
     // Request Goko casual and pro ratings (async)
     AM.fetchOwnRatings = function () {
-        AM.player.rating = {}
-        
+        AM.player.rating = {};
+
         if (AM.player.kind === 'guest') {
             // TODO: look up guest ratings correctly
             AM.player.rating.goko_casual_rating = 1000;
             AM.player.rating.goko_pro_rating = 1000;
         } else {
-                        
+
             // Asynchronously get casual rating
             AM.gokoconn.getRating({
                 playerId: AM.player.pid,
                 ratingSystemId: AM.CASUAL_SYS_ID
-            }, function(resp) {
+            }, function (resp) {
                 AM.player.rating.goko_casual_rating = resp.data.rating;
             });
 
@@ -130,7 +140,7 @@ var loadAutomatchExtension = function () {
             AM.gokoconn.getRating({
                 playerId: AM.player.pid,
                 ratingSystemId: AM.PRO_SYS_ID
-            }, function(resp) {
+            }, function (resp) {
                 AM.player.rating.goko_pro_rating = resp.data.rating;
             });
         }
@@ -190,19 +200,19 @@ var loadAutomatchExtension = function () {
                     });
                 });
             });
-        };
+        }
     };
 
-    AM.connectToAutomatchServer = function () {
+    AM.connectToAutomatchServer = function (url) {
 
         // Open connection asynchronously
-        AM.ws = new WebSocket(AM.url);
+        AM.ws = new WebSocket(url);
 
         // If connection is lost, wait 3 second and reconnect
         // TODO: detect timeouts
         // TODO: notify player of disconnect
         AM.ws.onclose = function () {
-            AM.testing && console.log('Lost contact with Automatch server. Reconnecting');
+            testlog('Lost contact with Automatch server. Reconnecting');
             AM.ws = null;
             setTimeout(AM.connectToAutomatchServer, 3000);
         };
@@ -211,46 +221,47 @@ var loadAutomatchExtension = function () {
         AM.ws.onmessage = function (evt) {
             var msg = JSON.parse(evt.data);
 
-            AM.testing && console.log('Received ' + msg.msgtype + ' message from automatch server:');
-            AM.testing && console.log(msg.message);
-            
-            switch(msg.msgtype) {
-                case 'CONFIRM_RECEIPT':
-                    AM.confirmReceipt(msg.message);
-                    break;
-                case 'CONFIRM_SEEK':
-                    AM.confirmSeek(msg.message);
-                    break;
-                case 'OFFER_MATCH':
-                    AM.offerMatch(msg.message);
-                    break;
-                case 'RESCIND_OFFER':
-                    AM.rescindOffer(msg.message);
-                    break;
-                case 'ANNOUNCE_GAME':
-                    AM.announceGame(msg.message);
-                    break;
-                case 'UNANNOUNCE_GAME':
-                    AM.unannounceGame(msg.message);
-                    break;
-                default:
-                    throw 'Received unknown message type: ' + msg.msgtype;
+            testlog('Received ' + msg.msgtype + ' message from automatch server:');
+            testlog(msg.message);
+
+            switch (msg.msgtype) {
+            case 'CONFIRM_RECEIPT':
+                AM.confirmReceipt(msg.message);
+                break;
+            case 'CONFIRM_SEEK':
+                AM.confirmSeek(msg.message);
+                break;
+            case 'OFFER_MATCH':
+                AM.offerMatch(msg.message);
+                break;
+            case 'RESCIND_OFFER':
+                AM.rescindOffer(msg.message);
+                break;
+            case 'ANNOUNCE_GAME':
+                AM.announceGame(msg.message);
+                break;
+            case 'UNANNOUNCE_GAME':
+                AM.unannounceGame(msg.message);
+                break;
+            default:
+                throw 'Received unknown message type: ' + msg.msgtype;
             }
         };
 
         // Wrap websocket send() method
         AM.sendMessage = function (msgtype, msg, callback) {
-            var msgid = AM.player.pname + Date.now();
-            var msgObj = {msgtype: msgtype,
+            var msgid, msgObj, msgStr;
+            msgid = AM.player.pname + Date.now();
+            msgObj = {msgtype: msgtype,
                            message: msg,
                            msgid: msgid};
-            var msgStr = JSON.stringify(msgObj);
+            msgStr = JSON.stringify(msgObj);
 
             AM.ws.callbacks[msgid] = callback;
             AM.ws.send(msgStr);
 
-            AM.testing && console.log('Sent ' + msgtype + ' message to server:');
-            AM.testing && console.log(msgObj);
+            testlog('Sent ' + msgtype + ' message to server:');
+            testlog(msgObj);
         };
 
         // Callbacks to be run when server confirms msgid received
@@ -264,10 +275,10 @@ var loadAutomatchExtension = function () {
 
     // Invoke the callback registered to this message's id, if any.
     AM.confirmReceipt = function (msg) {
-        AM.testing && console.log('Receipt of message confirmed: ' + msg.msgid);
+        testlog('Receipt of message confirmed: ' + msg.msgid);
         var callback = AM.ws.callbacks[msg.msgid];
         if (typeof callback !== 'undefined' && callback !== null) {
-            AM.testing && console.log(callback);
+            testlog(callback);
             callback();
         }
     };
@@ -310,8 +321,10 @@ var loadAutomatchExtension = function () {
     };
 
     AM.hostAutomatchGame = function () {
-        AM.testing && console.log('Creating automatch game')
-        var opps = AM.getOppnames(AM.state.game, AM.player.pname);
+        var opps, listenJoin;
+
+        testlog('Creating automatch game');
+        opps = AM.getOppnames(AM.state.game, AM.player.pname);
 
         // Create the game (async)
         AM.createGame(opps, AM.state.game.rating_system);
@@ -323,56 +336,58 @@ var loadAutomatchExtension = function () {
         // Note: Goko doesn't actually send a "player joined" event, so 
         //       we can't listen for those. Instead we get the whole lobby's
         //       table state changes.
-        AM.gokoconn.bind(AM.TABLE_STATE, function() {
+        listenJoin = function () {
             var game = AM.getGameOwnedBy(AM.player.pname);
-            if (typeof game !== 'undefined' 
-                && game.get('joined').length === opps.length + 1) {
-                    AM.gokoconn.unbind(AM.TABLE_STATE, arguments.callee);
-                    AM.testing && console.log('All opponents have joined');
-                    AM.testing && console.log('Automatch complete.');
-                    AM.showGamePop(false);
-                    AM.setAutoaccept(false); // Restore default join request dialog
+            if (typeof game !== 'undefined' && game.get('joined').length === opps.length + 1) {
+                AM.gokoconn.unbind(AM.TABLE_STATE, listenJoin);
+                testlog('All opponents have joined');
+                testlog('Automatch complete.');
+                AM.showGamePop(false);
+                AM.setAutoaccept(false); // Restore default join request dialog
             }
-        });
+        };
+        AM.gokoconn.bind(AM.TABLE_STATE, listenJoin);
     };
 
     // 
     AM.joinAutomatchGame = function () {
+        var game, getAMTableIfReady, joinTable;
 
         // Whether the hosted game exists and is ready for us to join
-        var getAMTableIfReady = function() {
+        getAMTableIfReady = function () {
             var g = AM.getGameOwnedBy(AM.state.game.hostname);
             console.log(g);
             if (typeof g === 'undefined') {
-                AM.testing && console.log('No AM table yet');
-                return null;
+                testlog('No AM table yet');
+                g = null;
             } else if (g.get('requestJoin') !== true) {
-                AM.testing && console.log('AM table exists but not configured yet');
-                return null;
+                testlog('AM table exists but not configured yet');
+                g = null;
             } else {
-                AM.testing && console.log('AM table ready. Joining');
+                testlog('AM table ready. Joining');
                 return g;
             }
-        }
+        };
 
         // Check once, then 
-        var game = getAMTableIfReady();
+        game = getAMTableIfReady();
         if (game !== null) {
-            AM.testing && console.log('AM table was ready on first try. Joining.');
+            testlog('AM table was ready on first try. Joining.');
             AM.joinGame(game);
             AM.showGamePop(false);
         } else {
-            AM.testing && console.log('AM table was not ready. Binding to tableState events');
-            AM.gokoconn.bind(AM.TABLE_STATE, function() {
+            testlog('AM table was not ready. Binding to tableState events');
+            joinTable = function () {
                 var game = getAMTableIfReady();
                 if (game !== null) {
-                    AM.testing && console.log('AM table was finally ready.'
+                    testlog('AM table was finally ready.'
                         + 'Unbinding from tableState events and joining.');
                     AM.joinGame(game);
                     AM.showGamePop(false);
-                    AM.gokoconn.unbind(AM.TABLE_STATE, arguments.callee);
+                    AM.gokoconn.unbind(AM.TABLE_STATE, joinTable);
                 }
-            });
+            };
+            AM.gokoconn.bind(AM.TABLE_STATE, joinTable);
         }
     };
 
@@ -382,7 +397,7 @@ var loadAutomatchExtension = function () {
         AM.state.reason = msg.reason;
     };
 
-    AM.testing && console.log('Automatch script loaded.');
+    testlog('Automatch script loaded.');
 };
 
 // Execute our code in Goko's JS context by appending it to the document
