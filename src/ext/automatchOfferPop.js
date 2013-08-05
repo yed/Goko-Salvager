@@ -1,34 +1,39 @@
-var loadAMOfferPop = function() {
-    if (typeof AM === 'undefined') {
-        AM = {}
-    }
+var loadAMOfferPop = function () {
+    "use strict";
+    var AM;
 
-    AM.appendOfferPopup = function(viewport) {
+    // Automatch namespace
+    if (!window.hasOwnProperty('AM')) {
+        window.AM = {};
+    }
+    AM = window.AM;
+
+    AM.appendOfferPopup = function (viewport) {
         viewport.append($(AM.getOfferPopHTML()));
         AM.configureOfferPop();
-    }
+    };
 
-    AM.getOfferPopHTML = function() {
+    AM.getOfferPopHTML = function () {
         return ['<div id="offerPop" style="visibility:hidden">',
-                '  <h3 style="text-align:center">Match Found</h3>',
-                '  ',
-                '  Players:<br>',
-                '  <ul id="plist"> </ul>',
-                '  Host: <label id="offerhost" /><br>',
-                '  Sets: <label id="offersets" /><br>',
-                '  Rating: <label id="offerrating" /><br>',
-                '  Room: <label id="offerroom" /><br>',
-                '  ',
-                '  <p id="offerwaitinfo" />',
-                '  ',
-                '  <input type="button" class="automatch offer" id="offeracc" value="Accept" />',
-                '  <input type="button" class="automatch offer" id="offerdec" value="Decline/Cancel" />',
-                '</div>'
-               ].join('\n');
+               '  <h3 style="text-align:center">Match Found</h3>',
+               '  ',
+               '  Players:<br>',
+               '  <ul id="plist"> </ul>',
+               '  Host: <label id="offerhost" /><br>',
+               '  Sets: <label id="offersets" /><br>',
+               '  Rating: <label id="offerrating" /><br>',
+               '  Room: <label id="offerroom" /><br>',
+               '  ',
+               '  <p id="offerwaitinfo" />',
+               '  ',
+               '  <input type="button" id="offeracc" value="Accept" />',
+               '  <input type="button" id="offerdec" value="Decline/Cancel" />',
+               '</div>'
+                   ].join('\n');
     };
 
     // Define UI behavior
-    AM.configureOfferPop = function() {
+    AM.configureOfferPop = function () {
 
         // Override Goko's "hide select" elements by default" nonsense
         $('#offerPop .wtfgoko').css('visibility', 'inherit');
@@ -50,11 +55,12 @@ var loadAMOfferPop = function() {
             // Disable UI while waiting for server response.
             $('#offeracc').prop('disabled', true);
             $('#offerrej').prop('disabled', true);
-            $('#offerwaitinfo').html('Accepted offer. Waiting for server to confirm.');
+            $('#offerwaitinfo').html('Accepted. Waiting for confirmation.');
 
             // Notify server
-            AM.sendMessage('ACCEPT_OFFER', {matchid: AM.state.offer.matchid}, function() {
-                $('#offerwaitinfo').html('Accepted offer. Waiting for opponents(s) to accept.');
+            var msg = {matchid: AM.state.offer.matchid};
+            AM.sendMessage('ACCEPT_OFFER', msg, function () {
+                $('#offerwaitinfo').html('Accepted offer. Waiting for opp(s).');
                 $('#offeracc').prop('disabled', true);
                 $('#offerrej').prop('disabled', false);
             });
@@ -63,12 +69,13 @@ var loadAMOfferPop = function() {
         $('#offerdec').click(function (evt) {
             AM.showOfferPop(false);
 
+            var msg = {matchid: AM.state.offer.matchid};
             if (AM.state.offer.accepted !== null && AM.state.offer.accepted) {
-                AM.sendMessage('UNACCEPT_OFFER', {matchid: AM.state.offer.matchid}, function() {
+                AM.sendMessage('UNACCEPT_OFFER', msg, function () {
                     AM.state.offer = null;
                 });
             } else {
-                AM.sendMessage('DECLINE_OFFER', {matchid: AM.state.offer.matchid}, function() {
+                AM.sendMessage('DECLINE_OFFER', msg, function () {
                     AM.state.offer = null;
                 });
             }
@@ -76,7 +83,7 @@ var loadAMOfferPop = function() {
     }
 
     // Update and show/hide the dialog
-    AM.showOfferPop = function(visible) {
+    AM.showOfferPop = function (visible) {
         if (typeof visible === "undefined") {
             visible = true;
         }
@@ -84,10 +91,10 @@ var loadAMOfferPop = function() {
         if (AM.state.offer !== null) {
             // List players
             $('#plist').empty();
-            AM.state.offer.seeks.map(function(s) {
+            AM.state.offer.seeks.map(function (s) {
                 var p = s.player.pname + ' [' + s.player.rating.goko_pro_rating + ']'
                 $('#plist').append('<li>' + p + '</li>');
-                // TODO: use casual rating if it's a casual game
+            // TODO: use casual rating if it's a casual game
             });
 
             // List or count card sets
