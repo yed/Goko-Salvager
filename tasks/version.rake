@@ -4,6 +4,9 @@ VERSION_BROWSER_INFO = {
   chrome: {
     CHROME_MANIFEST => [->(v) { "\"version\": \"#{v}\"" }]
   },
+  firefox: {
+    FIREFOX_PACKAGE => [->(v) { "\"version\": \"#{v}\"" }]
+  },
   safari: {
     SAFARI_INFO => [
                     ->(v) { "<key>CFBundleShortVersionString</key>\n\t<string>#{v}<\/string>" },

@@ -17,6 +17,8 @@ VERSION = 'VERSION'
 CHROME_MANIFEST = 'chrome/manifest.json'
 CHROME_IMAGES = 'chrome/images/'
 
+FIREFOX_PACKAGE = 'firefox/package.json'
+
 SAFARI_INFO = 'safari/Info.plist'
 SAFARI_SETTINGS = 'safari/Settings.plist'
 
