@@ -18,3 +18,4 @@ Contributors
 - 1wheel
 - michaeljb
 - ragingduckd
+- yed (Zdenek Bouska)
