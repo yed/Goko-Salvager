@@ -1,3 +1,6 @@
+/*jslint browser: true, devel: true, indent: 4, maxlen: 90, es5: true */
+/*global jQuery, $ */
+
 // To be executed in Goko's namespace
 var loadAutomatchExtension = function () {
     "use strict";
