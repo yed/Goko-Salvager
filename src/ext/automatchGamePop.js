@@ -1,3 +1,6 @@
+/*jslint browser: true, devel: true, indent: 4, maxlen: 90, es5: true */
+/*global jQuery, $ */
+
 var loadAMGamePop = function () {
     "use strict";
     var AM;
