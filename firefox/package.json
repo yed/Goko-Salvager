@@ -1,12 +1,12 @@
 {
   "name": "gokosalvager",
-  "fullName": "Goko Salvager",
+  "fullName": "Goko Online Dominion Salvager",
   "id": "jid1-R9otFQC4GvKlUQ",
-  "description": "\"Making Goko almost tolerable\"",
+  "description": "Enhance your Online Dominion experience!",
   "author": "",
-  "contributors": ["michaeljb", "ragingduckd", "nutki"],
+  "contributors": ["philosophyguy", "1wheel", "michaeljb", "nutki", "ragingduckd"],
   "icon": "data/salvager48.png",
-  "homepage": "http://forum.dominionstrategy.com",
+  "homepage": "http://forum.dominionstrategy.com/index.php?topic=9063.0",
   "license": "MPL 2.0",
-  "version": "2.0"
+  "version": "2.1"
 }
