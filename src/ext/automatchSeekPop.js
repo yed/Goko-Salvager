@@ -2,28 +2,20 @@
 /*global jQuery, $ */
 
 var loadAMSeekPop = function () {
-    "use strict";
+    "use strict"; // JSList mode
 
-    // Automatch namespace
-    if (!window.hasOwnProperty('AM')) {
-        window.AM = {};
-    }
-    var AM = window.AM;
+    // Automatch global namespace
+    var AM = window.AM = (window.AM || {});
 
     AM.appendSeekPopup = function (viewport) {
-        viewport.append($(AM.getSeekPopHTML()));
-        AM.configureSeekPop();
-    };
-
-    AM.getSeekPopHTML = function () {
-        return [
+        viewport.append([
             '<div id="seekPop" style="visibility:hidden">',
             '  <h3 style="text-align:center">Request Automatch</h3>',
             '  <table>',
             '    <tr>',
             '      <td colspan="2">',
             '        <label>Min Players:</label>',
-            '        <select class="wtfgoko" id="minPlayers">',
+            '        <select id="minPlayers">',
             '          <option value="2">2</option>',
             '          <option value="3">3</option>',
             '          <option value="4">4</option>',
@@ -33,7 +25,7 @@ var loadAMSeekPop = function () {
             '      </td>',
             '      <td colspan="2">',
             '        <label>Min Sets:</label>',
-            '        <select class="wtfgoko" id="minSets">',
+            '        <select id="minSets">',
             '          <option selected value="1">Base Only</option>',
             '          <option value="2">2</option>',
             '          <option value="3">3</option>',
@@ -54,7 +46,7 @@ var loadAMSeekPop = function () {
             '    <tr>',
             '      <td colspan="2">',
             '        <label>Max Players:</label>',
-            '        <select class="wtfgoko" id="maxPlayers">',
+            '        <select id="maxPlayers">',
             '          <option value="2">2</option>',
             '          <option value="3">3</option>',
             '          <option value="4">4</option>',
@@ -64,7 +56,7 @@ var loadAMSeekPop = function () {
             '      </td>',
             '      <td colspan="2">',
             '        <label>Max Sets:</label>',
-            '        <select class="wtfgoko" id="maxSets">',
+            '        <select id="maxSets">',
             '          <option value="1">Base Only</option>',
             '          <option value="2">2</option>',
             '          <option value="3">3</option>',
@@ -97,9 +89,9 @@ var loadAMSeekPop = function () {
             '        <label>System</label>',
             '      </td>',
             '      <td colspan="1">',
-            '        <select class="wtfgoko" id="ratingSystem">',
+            '        <select id="ratingSystem">',
             '          <option value="pro">Pro</option>',
-            '          <option value="casual">Casual</option>',
+            '          <!--option value="casual">Casual</option-->',
             '        </select>',
             '      </td>',
             '    </tr>',
@@ -120,14 +112,12 @@ var loadAMSeekPop = function () {
             '      </td>',
             '    </tr>',
             '  </table>',
-            '</div>'].join('');
-    };
+            '</div>'
+        ].join(''));
 
-    // Define UI behavior
-    AM.configureSeekPop = function () {
-        // Override Goko's "hide select" elements by default" nonsense
-        $('#seekPop .wtfgoko').css('visibility', 'inherit');
-        $('#seekPop .wtfgoko').css('top', 'auto');
+        // Override Goko's "hide select elements by default" css
+        $('#seekPop select').css('visibility', 'inherit');
+        $('#seekPop select').css('top', 'auto');
 
         // Make this into a lightbox-style dialog
         $('#seekPop').css("position", "absolute");
@@ -161,9 +151,10 @@ var loadAMSeekPop = function () {
             rs.props.rating_system = $('#ratingSystem').val();
 
             // Send seek request
-            AM.state.seek = {player: AM.player,
-                requirements: [np, ns, rr, rs]};
-            AM.sendMessage('SUBMIT_SEEK', {seek: AM.state.seek});
+            AM.submitSeek({
+                player: AM.player,
+                requirements: [np, ns, rr, rs]
+            });
 
             // Hide the dialog
             AM.showSeekPop(false);
@@ -171,12 +162,7 @@ var loadAMSeekPop = function () {
 
         // Cancel outstanding request, if any, and close dialog
         $('#seekcan').click(function () {
-            if (AM.state.seek !== null) {
-                AM.state.seek.canceling = true;
-                AM.sendMessage('CANCEL_SEEK',
-                    {seekid: AM.state.seek.seekid},
-                    function () { AM.state.seek = null; });
-            }
+            AM.cancelSeek();
             AM.showSeekPop(false);
         });
 
@@ -220,22 +206,17 @@ var loadAMSeekPop = function () {
 
     // Update and show/hide the dialog
     AM.showSeekPop = function (visible) {
-        var connected, playerLoaded, seeking, canceling;
+        var seeking, canceling;
         if (typeof visible === "undefined") {
             visible = true;
         }
 
-        connected = AM.ws !== null && AM.ws.readyState === 1;
-        playerLoaded = AM.player.sets_owned
-            && AM.player.rating.hasOwnProperty('goko_casual_rating')
-            && AM.player.rating.hasOwnProperty('goko_pro_rating');
         seeking = (AM.state.seek !== null);
         canceling = seeking && AM.state.seek.hasOwnProperty('canceling');
 
         $('#seekPop select').prop('disabled', seeking || canceling);
         $('#seekPop input').prop('disabled', seeking || canceling);
-        $('#seekreq').prop('disabled',
-                seeking || canceling || !connected || !playerLoaded);
+        $('#seekreq').prop('disabled', seeking || canceling);
         $('#seekcan').prop('disabled', canceling);
         $('#seekhide').prop('disabled', false);
         $('#seekstatus').html(seeking ? 'Looking for a match...' : '');
