@@ -592,11 +592,13 @@ var _foo = function () {
 
     var old_onIncomingMessage = DominionClient.prototype.onIncomingMessage;
     DominionClient.prototype.onIncomingMessage = function(messageName, messageData, message) {
-        var msgSend = "", sendVpOn = false, sendVpOff = false, tablename;
+        var msgSend = "", sendVpOn = false, sendVpOff = false, tablename = "";
 
         try {
 
-            tablename = JSON.parse(this.table.get("settings")).name;
+	    if (this.table.get("settings")) {
+		tablename = JSON.parse(this.table.get("settings")).name;
+	    }
 
             if (messageName == 'RoomChat') {
 	              console.log(messageData.text);
